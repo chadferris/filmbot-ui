@@ -269,13 +269,23 @@ class DrivePage(WizardPage):
         folder_label = QLabel("Destination Folder:")
         folder_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         self.layout.addWidget(folder_label)
-        
+
+        folder_row = QHBoxLayout()
         self.folder_input = QLineEdit()
         self.folder_input.setPlaceholderText("OrgName/BoxID")
         self.folder_input.setMinimumHeight(40)
         self.folder_input.setStyleSheet("font-size: 14px; padding: 5px;")
-        self.layout.addWidget(self.folder_input)
-        
+        folder_row.addWidget(self.folder_input)
+
+        browse_btn = QPushButton("📁 Browse")
+        browse_btn.setMinimumHeight(40)
+        browse_btn.setFixedWidth(100)
+        browse_btn.setStyleSheet(self._button_style("#757575"))
+        browse_btn.clicked.connect(self.browse_folders)
+        folder_row.addWidget(browse_btn)
+
+        self.layout.addLayout(folder_row)
+
         # Test button
         test_btn = QPushButton("Test Connection")
         test_btn.setMinimumHeight(40)
@@ -286,15 +296,75 @@ class DrivePage(WizardPage):
         self.layout.addStretch()
         self.add_navigation_buttons()
     
+    def browse_folders(self):
+        """Browse Google Drive folders using rclone."""
+        remote = self.remote_input.text().strip()
+
+        if not remote:
+            QMessageBox.warning(self, "Error", "Please enter a remote name first")
+            return
+
+        try:
+            # Get current folder or root
+            current_folder = self.folder_input.text().strip()
+
+            # List directories
+            result = subprocess.run(
+                ['rclone', 'lsd', f"{remote}{current_folder}"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode != 0:
+                QMessageBox.warning(self, "Error", f"Failed to list folders:\n{result.stderr}")
+                return
+
+            # Parse folder list
+            folders = []
+            for line in result.stdout.strip().split('\n'):
+                if line.strip():
+                    # rclone lsd format: "          -1 2024-01-01 12:00:00        -1 FolderName"
+                    parts = line.split()
+                    if len(parts) >= 5:
+                        folder_name = ' '.join(parts[4:])
+                        folders.append(folder_name)
+
+            if not folders:
+                QMessageBox.information(self, "Browse", "No folders found in this location")
+                return
+
+            # Show folder selection dialog
+            from PySide6.QtWidgets import QInputDialog
+            folder, ok = QInputDialog.getItem(
+                self,
+                "Select Folder",
+                "Choose a folder:",
+                folders,
+                0,
+                False
+            )
+
+            if ok and folder:
+                # Append to current path
+                if current_folder:
+                    new_path = f"{current_folder}/{folder}"
+                else:
+                    new_path = folder
+                self.folder_input.setText(new_path)
+
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Browse failed: {str(e)}")
+
     def test_connection(self):
         """Test rclone connection."""
         remote = self.remote_input.text().strip()
         folder = self.folder_input.text().strip()
-        
+
         if not remote:
             QMessageBox.warning(self, "Error", "Please enter a remote name")
             return
-        
+
         try:
             # Test with rclone lsd
             result = subprocess.run(
@@ -303,7 +373,7 @@ class DrivePage(WizardPage):
                 text=True,
                 timeout=10
             )
-            
+
             if result.returncode == 0:
                 QMessageBox.information(self, "Success", "Connection test successful!")
             else:

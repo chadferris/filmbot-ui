@@ -47,30 +47,74 @@ class LiveView(QWidget):
     def setup_ui(self):
         """Setup the UI layout."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-        
-        # Video preview (main area)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(5)
+
+        # Video preview (main area - maximize this)
         video_device = self.config.get_video_device()
         self.video_widget = VideoPreviewWidget(device_path=video_device)
-        self.video_widget.setMinimumHeight(400)
-        layout.addWidget(self.video_widget, stretch=3)
-        
-        # Status panel
-        status_panel = self.create_status_panel()
-        layout.addWidget(status_panel, stretch=1)
-        
-        # Settings button
+        layout.addWidget(self.video_widget, stretch=1)
+
+        # Compact bottom bar with status and settings button
+        bottom_bar = self.create_bottom_bar()
+        layout.addWidget(bottom_bar)
+    
+    def create_bottom_bar(self) -> QWidget:
+        """Create compact bottom bar with status and settings button."""
+        bar = QWidget()
+        bar.setMaximumHeight(50)
+        bar.setStyleSheet("""
+            QWidget {
+                background-color: #f5f5f5;
+                border-radius: 3px;
+            }
+        """)
+
+        layout = QHBoxLayout(bar)
+        layout.setContentsMargins(8, 5, 8, 5)
+        layout.setSpacing(10)
+
+        # Recording status (compact)
+        self.recording_label = QLabel("● Idle")
+        self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #666;")
+        layout.addWidget(self.recording_label)
+
+        # Separator
+        sep1 = QLabel("|")
+        sep1.setStyleSheet("color: #ccc;")
+        layout.addWidget(sep1)
+
+        # Next recording (compact)
+        self.next_recording_label = QLabel("Next: --")
+        self.next_recording_label.setStyleSheet("font-size: 12px;")
+        layout.addWidget(self.next_recording_label)
+
+        # Separator
+        sep2 = QLabel("|")
+        sep2.setStyleSheet("color: #ccc;")
+        layout.addWidget(sep2)
+
+        # Storage (compact)
+        self.storage_label = QLabel("Storage: --")
+        self.storage_label.setStyleSheet("font-size: 12px;")
+        layout.addWidget(self.storage_label)
+
+        # Spacer to push settings button to the right
+        layout.addStretch()
+
+        # Settings button (compact)
         settings_btn = QPushButton("⚙ Settings")
-        settings_btn.setMinimumHeight(50)
+        settings_btn.setFixedHeight(40)
+        settings_btn.setMinimumWidth(120)
         settings_btn.setStyleSheet("""
             QPushButton {
                 background-color: #2196F3;
                 color: white;
                 border: none;
-                border-radius: 5px;
-                font-size: 16px;
+                border-radius: 3px;
+                font-size: 14px;
                 font-weight: bold;
+                padding: 5px 15px;
             }
             QPushButton:pressed {
                 background-color: #1976D2;
@@ -78,53 +122,13 @@ class LiveView(QWidget):
         """)
         settings_btn.clicked.connect(self.settings_requested.emit)
         layout.addWidget(settings_btn)
-    
-    def create_status_panel(self) -> QFrame:
-        """Create the status information panel.
-        
-        Returns:
-            Status panel widget
-        """
-        panel = QFrame()
-        panel.setFrameStyle(QFrame.StyledPanel | QFrame.Raised)
-        panel.setStyleSheet("""
-            QFrame {
-                background-color: #f5f5f5;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-            }
-        """)
-        
-        layout = QVBoxLayout(panel)
-        layout.setSpacing(8)
-        
-        # Recording status
-        self.recording_label = QLabel("● Idle")
-        self.recording_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #666;")
-        layout.addWidget(self.recording_label)
-        
-        # Next recording
-        self.next_recording_label = QLabel("Next: --")
-        self.next_recording_label.setStyleSheet("font-size: 14px;")
-        layout.addWidget(self.next_recording_label)
-        
-        # Sync status
-        self.sync_label = QLabel("Sync: --")
-        self.sync_label.setStyleSheet("font-size: 14px;")
-        layout.addWidget(self.sync_label)
-        
-        # Storage
-        self.storage_label = QLabel("Storage: --")
-        self.storage_label.setStyleSheet("font-size: 14px;")
-        layout.addWidget(self.storage_label)
-        
-        return panel
+
+        return bar
     
     def update_status(self):
         """Update all status information."""
         self.update_recording_status()
         self.update_next_recording()
-        self.update_sync_status()
         self.update_storage_status()
     
     def update_recording_status(self):
@@ -140,13 +144,13 @@ class LiveView(QWidget):
             
             if result.returncode == 0 and 'active' in result.stdout:
                 self.recording_active = True
-                self.recording_label.setText("🔴 RECORDING")
-                self.recording_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #f44336;")
+                self.recording_label.setText("🔴 REC")
+                self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #f44336;")
                 self.video_widget.set_recording(True)
             else:
                 self.recording_active = False
                 self.recording_label.setText("● Idle")
-                self.recording_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #666;")
+                self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #666;")
                 self.video_widget.set_recording(False)
         except Exception as e:
             print(f"Error checking recording status: {e}")
@@ -173,33 +177,7 @@ class LiveView(QWidget):
         
         self.next_recording_label.setText("Next: No enabled schedules")
     
-    def update_sync_status(self):
-        """Update Google Drive sync status."""
-        log_path = Path("/var/log/filmbot-rclone.log")
-        
-        if not log_path.exists():
-            self.sync_label.setText("Sync: No log file")
-            return
-        
-        try:
-            # Read last few lines of log
-            result = subprocess.run(
-                ['tail', '-n', '20', str(log_path)],
-                capture_output=True,
-                text=True
-            )
-            
-            if 'Transferred:' in result.stdout:
-                # Parse for recent activity
-                self.sync_label.setText("Sync: ✓ Active")
-                self.sync_label.setStyleSheet("font-size: 14px; color: #4CAF50;")
-            else:
-                self.sync_label.setText("Sync: Idle")
-                self.sync_label.setStyleSheet("font-size: 14px;")
-        except Exception as e:
-            self.sync_label.setText(f"Sync: Error")
-            print(f"Error reading sync log: {e}")
-    
+
     def update_storage_status(self):
         """Update local storage information."""
         recordings_path = Path("/mnt/nvme/recordings")
