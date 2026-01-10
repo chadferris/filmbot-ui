@@ -55,13 +55,13 @@ This guide walks you through setting up the Filmbot Recording Appliance on a **b
 
    The installer will:
    - Install all system dependencies (ffmpeg, rclone, v4l-utils, alsa-utils)
-   - Download and install Blackmagic Desktop Video drivers
    - Create a Python virtual environment
    - Install PySide6 and other Python packages
    - Set up the Filmbot UI application
    - Install recording and sync scripts
    - Configure auto-login
    - Enable auto-start on boot
+   - Check for video capture devices (ATEM works as UVC device)
 
 4. **Set up NVMe storage**
    ```bash

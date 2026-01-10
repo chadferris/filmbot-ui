@@ -54,45 +54,20 @@ sudo apt install -y python3-full python3-pip python3-venv libgl1 libglib2.0-0 \
     libxcb-render-util0 libxcb-shape0 v4l-utils alsa-utils wget curl \
     ffmpeg rclone parted
 
-# Install Blackmagic Desktop Video drivers
+# Check for video capture devices
 echo ""
-echo "Installing Blackmagic Desktop Video drivers..."
-
-# Check if already installed
-if dpkg -l | grep -q desktopvideo; then
-    echo "Blackmagic Desktop Video already installed, skipping..."
-else
-    DESKTOP_VIDEO_VERSION="12.9"
-    DESKTOP_VIDEO_URL="https://sw.blackmagicdesign.com/DesktopVideo/v${DESKTOP_VIDEO_VERSION}/Blackmagic_Desktop_Video_Linux_${DESKTOP_VIDEO_VERSION}.tar.gz"
-
-    echo "Downloading Desktop Video ${DESKTOP_VIDEO_VERSION}..."
-    cd /tmp
-    wget -q --show-progress "${DESKTOP_VIDEO_URL}" -O desktopvideo.tar.gz || {
-        echo "Warning: Could not download Blackmagic drivers automatically"
-        echo "Please download manually from: https://www.blackmagicdesign.com/support"
-        echo "Continuing without Blackmagic drivers..."
-    }
-
-    if [ -f desktopvideo.tar.gz ]; then
-        echo "Extracting..."
-        tar -xzf desktopvideo.tar.gz
-
-        # Find the .deb file for our architecture
-        DEB_FILE=$(find . -name "desktopvideo_*_${DEB_ARCH}.deb" | head -n 1)
-
-        if [ -n "$DEB_FILE" ]; then
-            echo "Installing $DEB_FILE..."
-            sudo dpkg -i "$DEB_FILE" || true
-            sudo apt-get install -f -y
-            echo "Blackmagic Desktop Video installed successfully!"
-        else
-            echo "Warning: Could not find .deb file for architecture $DEB_ARCH"
-        fi
-
-        # Cleanup
-        rm -rf /tmp/Blackmagic_Desktop_Video_Linux_*
-        rm -f /tmp/desktopvideo.tar.gz
+echo "Checking for video capture devices..."
+if ls /dev/video* >/dev/null 2>&1; then
+    echo "✓ Video devices detected:"
+    ls -l /dev/video*
+    echo ""
+    if command -v v4l2-ctl >/dev/null 2>&1; then
+        v4l2-ctl --list-devices
     fi
+else
+    echo "⚠ No video devices found"
+    echo "Note: ATEM Mini should appear as a UVC device automatically"
+    echo "If not detected, check USB connection and try a different port"
 fi
 
 # Create application directory

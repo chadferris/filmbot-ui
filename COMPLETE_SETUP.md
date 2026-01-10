@@ -68,8 +68,9 @@ sudo reboot
 - **rclone** - Google Drive sync
 - **v4l-utils** - Video device detection
 - **alsa-utils** - Audio device detection
-- **Blackmagic Desktop Video** - ATEM drivers
 - **Qt/PySide6 dependencies** - GUI libraries
+
+**Note**: ATEM Mini works as a standard UVC (USB Video Class) device - no special drivers needed!
 
 ### Python Packages (in venv)
 - **PySide6** - Qt GUI framework
