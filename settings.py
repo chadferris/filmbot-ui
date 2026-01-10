@@ -6,13 +6,13 @@ Allows configuration changes after initial setup.
 import socket
 import subprocess
 from pathlib import Path
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTime
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
     QComboBox, QSpinBox, QTimeEdit, QGroupBox, QScrollArea
 )
-from PySide6.QtGui import QTime
+from PySide6.QtGui import QFont
 
 from config_manager import ConfigManager
 from systemd_manager import SystemdManager

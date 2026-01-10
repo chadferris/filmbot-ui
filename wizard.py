@@ -4,13 +4,13 @@ Guides user through initial configuration.
 """
 
 import subprocess
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTime
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QComboBox, QSpinBox, QTimeEdit, QListWidget,
     QListWidgetItem, QMessageBox, QTextEdit, QStackedWidget
 )
-from PySide6.QtGui import QFont, QTime
+from PySide6.QtGui import QFont
 
 from config_manager import ConfigManager
 from systemd_manager import SystemdManager
