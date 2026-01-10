@@ -27,10 +27,10 @@ fi
 # Install system dependencies
 echo "Installing system dependencies..."
 sudo apt update
-sudo apt install -y python3-pip python3-venv libgl1-mesa-glx libglib2.0-0 \
+sudo apt install -y python3-pip python3-venv libgl1 libglib2.0-0 \
     libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0 libdbus-1-3 \
     libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
-    libxcb-render-util0 libxcb-shape0
+    libxcb-render-util0 libxcb-shape0 v4l-utils alsa-utils
 
 # Create application directory
 echo "Creating application directory..."
