@@ -138,25 +138,54 @@ class SettingsScreen(QWidget):
         layout = QVBoxLayout(group)
         
         # Remote
-        layout.addWidget(QLabel("Remote:"))
+        remote_label = QLabel("Remote:")
+        remote_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(remote_label)
         self.remote_input = QLineEdit()
-        self.remote_input.setMinimumHeight(40)
+        self.remote_input.setMinimumHeight(50)
+        self.remote_input.setStyleSheet("font-size: 16px; padding: 8px; font-weight: bold;")
         layout.addWidget(self.remote_input)
         
         # Folder
-        layout.addWidget(QLabel("Folder:"))
+        folder_label = QLabel("Folder:")
+        folder_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(folder_label)
+
+        folder_row = QHBoxLayout()
         self.folder_input = QLineEdit()
-        self.folder_input.setMinimumHeight(40)
-        layout.addWidget(self.folder_input)
-        
+        self.folder_input.setMinimumHeight(50)
+        self.folder_input.setStyleSheet("font-size: 16px; padding: 8px; font-weight: bold;")
+        folder_row.addWidget(self.folder_input)
+
+        browse_btn = QPushButton("📁 Browse")
+        browse_btn.setMinimumHeight(50)
+        browse_btn.setFixedWidth(140)
+        browse_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #FF9800;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:pressed {
+                background-color: #F57C00;
+            }
+        """)
+        browse_btn.clicked.connect(self.browse_drive_folders)
+        folder_row.addWidget(browse_btn)
+
+        layout.addLayout(folder_row)
+
         # Buttons
         btn_layout = QHBoxLayout()
-        
+
         test_btn = QPushButton("Test Connection")
         test_btn.setMinimumHeight(40)
         test_btn.clicked.connect(self.test_drive_connection)
         btn_layout.addWidget(test_btn)
-        
+
         save_btn = QPushButton("Save")
         save_btn.setMinimumHeight(40)
         save_btn.clicked.connect(self.save_drive_settings)
@@ -308,6 +337,66 @@ class SettingsScreen(QWidget):
             self.storage_info_label.setText(f"Storage: {used_gb:.1f} GB / {total_gb:.1f} GB")
         except:
             self.storage_info_label.setText("Storage: --")
+
+    def browse_drive_folders(self):
+        """Browse Google Drive folders using rclone."""
+        remote = self.remote_input.text().strip()
+
+        if not remote:
+            QMessageBox.warning(self, "Error", "Please enter a remote name first")
+            return
+
+        try:
+            # Get current folder or root
+            current_folder = self.folder_input.text().strip()
+
+            # List directories
+            result = subprocess.run(
+                ['rclone', 'lsd', f"{remote}{current_folder}"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode != 0:
+                QMessageBox.warning(self, "Error", f"Failed to list folders:\n{result.stderr}")
+                return
+
+            # Parse folder list
+            folders = []
+            for line in result.stdout.strip().split('\n'):
+                if line.strip():
+                    # rclone lsd format: "          -1 2024-01-01 12:00:00        -1 FolderName"
+                    parts = line.split()
+                    if len(parts) >= 5:
+                        folder_name = ' '.join(parts[4:])
+                        folders.append(folder_name)
+
+            if not folders:
+                QMessageBox.information(self, "Browse", "No folders found in this location")
+                return
+
+            # Show folder selection dialog
+            from PySide6.QtWidgets import QInputDialog
+            folder, ok = QInputDialog.getItem(
+                self,
+                "Select Folder",
+                "Choose a folder:",
+                folders,
+                0,
+                False
+            )
+
+            if ok and folder:
+                # Append to current path
+                if current_folder:
+                    new_path = f"{current_folder}/{folder}"
+                else:
+                    new_path = folder
+                self.folder_input.setText(new_path)
+
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Browse failed: {str(e)}")
 
     def test_drive_connection(self):
         """Test Google Drive connection."""
