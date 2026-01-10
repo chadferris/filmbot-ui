@@ -27,7 +27,7 @@ fi
 # Install system dependencies
 echo "Installing system dependencies..."
 sudo apt update
-sudo apt install -y python3-pip python3-venv libgl1 libglib2.0-0 \
+sudo apt install -y python3-full python3-pip python3-venv libgl1 libglib2.0-0 \
     libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0 libdbus-1-3 \
     libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
     libxcb-render-util0 libxcb-shape0 v4l-utils alsa-utils
@@ -43,10 +43,14 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cp "$SCRIPT_DIR"/*.py /opt/filmbot-appliance/ui/
 cp "$SCRIPT_DIR"/requirements.txt /opt/filmbot-appliance/ui/
 
+# Create virtual environment
+echo "Creating Python virtual environment..."
+cd /opt/filmbot-appliance/ui
+python3 -m venv venv
+
 # Install Python dependencies
 echo "Installing Python dependencies..."
-cd /opt/filmbot-appliance/ui
-python3 -m pip install --user -r requirements.txt
+./venv/bin/pip install -r requirements.txt
 
 # Make main.py executable
 chmod +x /opt/filmbot-appliance/ui/main.py

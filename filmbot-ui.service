@@ -11,7 +11,7 @@ Environment=DISPLAY=:0
 Environment=QT_QPA_PLATFORM=eglfs
 Environment=QT_QPA_EGLFS_ALWAYS_SET_MODE=1
 WorkingDirectory=/opt/filmbot-appliance/ui
-ExecStart=/usr/bin/python3 /opt/filmbot-appliance/ui/main.py
+ExecStart=/opt/filmbot-appliance/ui/venv/bin/python /opt/filmbot-appliance/ui/main.py
 Restart=always
 RestartSec=3
 
