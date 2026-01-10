@@ -76,27 +76,27 @@ class LiveView(QWidget):
 
         # Recording status (compact)
         self.recording_label = QLabel("● Idle")
-        self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #666;")
+        self.recording_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #666;")
         layout.addWidget(self.recording_label)
 
         # Separator
         sep1 = QLabel("|")
-        sep1.setStyleSheet("color: #ccc;")
+        sep1.setStyleSheet("color: #ccc; font-size: 16px;")
         layout.addWidget(sep1)
 
         # Next recording (compact)
         self.next_recording_label = QLabel("Next: --")
-        self.next_recording_label.setStyleSheet("font-size: 12px;")
+        self.next_recording_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         layout.addWidget(self.next_recording_label)
 
         # Separator
         sep2 = QLabel("|")
-        sep2.setStyleSheet("color: #ccc;")
+        sep2.setStyleSheet("color: #ccc; font-size: 16px;")
         layout.addWidget(sep2)
 
         # Storage (compact)
         self.storage_label = QLabel("Storage: --")
-        self.storage_label.setStyleSheet("font-size: 12px;")
+        self.storage_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         layout.addWidget(self.storage_label)
 
         # Spacer to push settings button to the right
@@ -105,14 +105,14 @@ class LiveView(QWidget):
         # Settings button (compact)
         settings_btn = QPushButton("⚙ Settings")
         settings_btn.setFixedHeight(40)
-        settings_btn.setMinimumWidth(120)
+        settings_btn.setMinimumWidth(140)
         settings_btn.setStyleSheet("""
             QPushButton {
                 background-color: #2196F3;
                 color: white;
                 border: none;
                 border-radius: 3px;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
                 padding: 5px 15px;
             }
@@ -145,12 +145,12 @@ class LiveView(QWidget):
             if result.returncode == 0 and 'active' in result.stdout:
                 self.recording_active = True
                 self.recording_label.setText("🔴 REC")
-                self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #f44336;")
+                self.recording_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #f44336;")
                 self.video_widget.set_recording(True)
             else:
                 self.recording_active = False
                 self.recording_label.setText("● Idle")
-                self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #666;")
+                self.recording_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #666;")
                 self.video_widget.set_recording(False)
         except Exception as e:
             print(f"Error checking recording status: {e}")

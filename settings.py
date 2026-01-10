@@ -47,7 +47,7 @@ class SettingsScreen(QWidget):
         
         # Title
         title = QLabel("Settings")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; color: #2196F3;")
+        title.setStyleSheet("font-size: 28px; font-weight: bold; color: #2196F3;")
         title.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title)
         
@@ -99,7 +99,7 @@ class SettingsScreen(QWidget):
     def create_device_section(self) -> QGroupBox:
         """Create device settings section."""
         group = QGroupBox("Recording Devices")
-        group.setStyleSheet("QGroupBox { font-size: 16px; font-weight: bold; }")
+        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
         layout = QVBoxLayout(group)
 
         # Video device
@@ -134,7 +134,7 @@ class SettingsScreen(QWidget):
     def create_drive_section(self) -> QGroupBox:
         """Create Google Drive settings section."""
         group = QGroupBox("Google Drive")
-        group.setStyleSheet("QGroupBox { font-size: 16px; font-weight: bold; }")
+        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
         layout = QVBoxLayout(group)
         
         # Remote
@@ -169,7 +169,7 @@ class SettingsScreen(QWidget):
     def create_schedules_section(self) -> QGroupBox:
         """Create recording schedules section."""
         group = QGroupBox("Recording Schedules")
-        group.setStyleSheet("QGroupBox { font-size: 16px; font-weight: bold; }")
+        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
         layout = QVBoxLayout(group)
         
         # Schedule list
@@ -218,7 +218,7 @@ class SettingsScreen(QWidget):
     def create_system_section(self) -> QGroupBox:
         """Create system information section."""
         group = QGroupBox("System Information")
-        group.setStyleSheet("QGroupBox { font-size: 16px; font-weight: bold; }")
+        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
         layout = QVBoxLayout(group)
 
         # Device name

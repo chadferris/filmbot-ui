@@ -250,37 +250,49 @@ class DrivePage(WizardPage):
             "Make sure you have already run 'rclone config' to authenticate."
         )
         instructions.setWordWrap(True)
-        instructions.setStyleSheet("font-size: 14px; padding: 10px;")
+        instructions.setStyleSheet("font-size: 16px; padding: 10px;")
         self.layout.addWidget(instructions)
-        
+
         # Remote name
         remote_label = QLabel("rclone Remote Name:")
-        remote_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        remote_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         self.layout.addWidget(remote_label)
-        
+
         self.remote_input = QLineEdit()
         self.remote_input.setPlaceholderText("filmbot-drive:")
         self.remote_input.setText("filmbot-drive:")
-        self.remote_input.setMinimumHeight(40)
-        self.remote_input.setStyleSheet("font-size: 14px; padding: 5px;")
+        self.remote_input.setMinimumHeight(50)
+        self.remote_input.setStyleSheet("font-size: 16px; padding: 8px; font-weight: bold;")
         self.layout.addWidget(self.remote_input)
-        
+
         # Folder path
         folder_label = QLabel("Destination Folder:")
-        folder_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        folder_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         self.layout.addWidget(folder_label)
 
         folder_row = QHBoxLayout()
         self.folder_input = QLineEdit()
         self.folder_input.setPlaceholderText("OrgName/BoxID")
-        self.folder_input.setMinimumHeight(40)
-        self.folder_input.setStyleSheet("font-size: 14px; padding: 5px;")
+        self.folder_input.setMinimumHeight(50)
+        self.folder_input.setStyleSheet("font-size: 16px; padding: 8px; font-weight: bold;")
         folder_row.addWidget(self.folder_input)
 
         browse_btn = QPushButton("📁 Browse")
-        browse_btn.setMinimumHeight(40)
-        browse_btn.setFixedWidth(100)
-        browse_btn.setStyleSheet(self._button_style("#757575"))
+        browse_btn.setMinimumHeight(50)
+        browse_btn.setFixedWidth(140)
+        browse_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #FF9800;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:pressed {
+                background-color: #F57C00;
+            }
+        """)
         browse_btn.clicked.connect(self.browse_folders)
         folder_row.addWidget(browse_btn)
 
