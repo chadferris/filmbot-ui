@@ -9,12 +9,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QStackedWidget, QSizePolicy
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
 )
 from PySide6.QtGui import QFont
 
 from video_preview import VideoPreviewWidget
-from recording_screen import RecordingScreen
 from config_manager import ConfigManager
 
 
@@ -25,73 +24,49 @@ class LiveView(QWidget):
     
     def __init__(self, config_manager: ConfigManager, parent=None):
         """Initialize live view.
-
+        
         Args:
             config_manager: Configuration manager instance
             parent: Parent widget
         """
         super().__init__(parent)
-
+        
         self.config = config_manager
         self.recording_active = False
-        self.signal_file = Path("/tmp/filmbot-recording")
-
+        
         self.setup_ui()
-
-        # Update timer - refresh status every 1 second (faster to detect recording)
+        
+        # Update timer - refresh status every 5 seconds
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_status)
-        self.update_timer.start(1000)
-
+        self.update_timer.start(5000)
+        
         # Initial status update
         self.update_status()
     
     def setup_ui(self):
         """Setup the UI layout."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(5)
 
-        # Stacked widget to switch between live view and recording screen
-        self.stack = QStackedWidget()
-
-        # Live view with video preview
-        live_widget = QWidget()
-        live_layout = QVBoxLayout(live_widget)
-        live_layout.setContentsMargins(0, 0, 0, 0)
-        live_layout.setSpacing(0)
-
+        # Video preview (main area - maximize this)
         video_device = self.config.get_video_device()
         self.video_widget = VideoPreviewWidget(device_path=video_device)
-        # Limit video height to leave room for bottom bar (480px window - 30px taskbar - 50px bottom bar = 400px max)
-        self.video_widget.setMaximumHeight(400)
-        live_layout.addWidget(self.video_widget, stretch=10)
+        layout.addWidget(self.video_widget, stretch=1)
 
         # Compact bottom bar with status and settings button
         bottom_bar = self.create_bottom_bar()
-        # Don't let bottom bar shrink - it needs fixed space
-        live_layout.addWidget(bottom_bar, stretch=0)
-
-        # Recording screen
-        self.recording_widget = RecordingScreen()
-
-        # Add both to stack
-        self.stack.addWidget(live_widget)
-        self.stack.addWidget(self.recording_widget)
-
-        layout.addWidget(self.stack)
+        layout.addWidget(bottom_bar)
     
     def create_bottom_bar(self) -> QWidget:
         """Create compact bottom bar with status and settings button."""
         bar = QWidget()
-        # Use size policy to prevent shrinking
-        bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        bar.setMinimumHeight(50)
         bar.setMaximumHeight(50)
         bar.setStyleSheet("""
             QWidget {
-                background-color: #2c3e50;
-                border-radius: 0px;
+                background-color: #f5f5f5;
+                border-radius: 3px;
             }
         """)
 
@@ -101,27 +76,27 @@ class LiveView(QWidget):
 
         # Recording status (compact)
         self.recording_label = QLabel("● Idle")
-        self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #ecf0f1;")
+        self.recording_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #666;")
         layout.addWidget(self.recording_label)
 
         # Separator
         sep1 = QLabel("|")
-        sep1.setStyleSheet("color: #7f8c8d; font-size: 14px;")
+        sep1.setStyleSheet("color: #ccc; font-size: 16px;")
         layout.addWidget(sep1)
 
         # Next recording (compact)
         self.next_recording_label = QLabel("Next: --")
-        self.next_recording_label.setStyleSheet("font-size: 12px; font-weight: bold; color: #ecf0f1;")
+        self.next_recording_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         layout.addWidget(self.next_recording_label)
 
         # Separator
         sep2 = QLabel("|")
-        sep2.setStyleSheet("color: #7f8c8d; font-size: 14px;")
+        sep2.setStyleSheet("color: #ccc; font-size: 16px;")
         layout.addWidget(sep2)
 
         # Storage (compact)
         self.storage_label = QLabel("Storage: --")
-        self.storage_label.setStyleSheet("font-size: 12px; font-weight: bold; color: #ecf0f1;")
+        self.storage_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         layout.addWidget(self.storage_label)
 
         # Spacer to push settings button to the right
@@ -152,33 +127,9 @@ class LiveView(QWidget):
     
     def update_status(self):
         """Update all status information."""
-        self.check_recording_signal()
         self.update_recording_status()
         self.update_next_recording()
         self.update_storage_status()
-
-    def check_recording_signal(self):
-        """Check if recording signal file exists and switch screens accordingly."""
-        if self.signal_file.exists():
-            # Recording is active - switch to recording screen
-            if self.stack.currentIndex() != 1:
-                print("Recording signal detected - stopping video preview")
-                self.video_widget.stop_preview()
-                self.stack.setCurrentIndex(1)
-
-                # Try to read filename from signal file
-                try:
-                    with open(self.signal_file, 'r') as f:
-                        filename = Path(f.read().strip()).name
-                        self.recording_widget.set_filename(filename)
-                except:
-                    pass
-        else:
-            # Recording is not active - switch to live view
-            if self.stack.currentIndex() != 0:
-                print("Recording signal cleared - restarting video preview")
-                self.stack.setCurrentIndex(0)
-                self.video_widget.start_preview()
     
     def update_recording_status(self):
         """Update recording status indicator."""

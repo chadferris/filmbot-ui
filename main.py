@@ -5,7 +5,6 @@ Touchscreen UI for Raspberry Pi 5 with 4.3" display.
 """
 
 import sys
-import subprocess
 from PySide6.QtWidgets import QApplication, QStackedWidget, QMainWindow
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QScreen
@@ -31,8 +30,9 @@ class FilmbotApp(QMainWindow):
         # Set window size for 800x480 touchscreen
         self.resize(800, 480)
 
-        # Fullscreen without window decorations
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        # For touchscreen, make fullscreen
+        # Uncomment on Raspberry Pi:
+        # self.showFullScreen()
         
         # Create stacked widget for different screens
         self.stack = QStackedWidget()
@@ -76,9 +76,6 @@ class FilmbotApp(QMainWindow):
 
 def main():
     """Main entry point."""
-    # Hide taskbar while app is running
-    subprocess.Popen(["pkill", "lxpanel"], stderr=subprocess.DEVNULL)
-
     # Create application
     app = QApplication(sys.argv)
 
@@ -86,32 +83,14 @@ def main():
     app.setStyle("Fusion")
 
     # For touchscreen, enable touch events
-    app.setAttribute(Qt.AA_SynthesizeTouchForUnhandledMouseEvents, True)
+    # app.setAttribute(Qt.AA_SynthesizeTouchForUnhandledMouseEvents, True)
 
     # Create and show main window
     window = FilmbotApp()
-
-    # Always use Screen 0 (DSI-2 - the physical touchscreen)
-    # This ensures the app appears on the actual display, not Pi Connect virtual display
-    screens = app.screens()
-    if screens:
-        # Use the first screen (DSI-2 800x480 touchscreen)
-        primary_screen = screens[0]
-        print(f"Filmbot: Using screen: {primary_screen.name()} ({primary_screen.geometry().width()}x{primary_screen.geometry().height()})")
-
-        # Set the window to use this screen explicitly
-        window.setScreen(primary_screen)
-
-    # Show fullscreen to hide taskbar
-    window.showFullScreen()
+    window.show()
 
     # Run event loop
-    exit_code = app.exec()
-
-    # Restore taskbar when app closes
-    subprocess.Popen(["lxpanel"], stderr=subprocess.DEVNULL)
-
-    sys.exit(exit_code)
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
