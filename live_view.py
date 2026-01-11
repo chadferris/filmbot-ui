@@ -49,8 +49,8 @@ class LiveView(QWidget):
     def setup_ui(self):
         """Setup the UI layout."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.setSpacing(5)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         # Stacked widget to switch between live view and recording screen
         self.stack = QStackedWidget()
@@ -59,11 +59,12 @@ class LiveView(QWidget):
         live_widget = QWidget()
         live_layout = QVBoxLayout(live_widget)
         live_layout.setContentsMargins(0, 0, 0, 0)
-        live_layout.setSpacing(5)
+        live_layout.setSpacing(0)
 
         video_device = self.config.get_video_device()
         self.video_widget = VideoPreviewWidget(device_path=video_device)
-        live_layout.addWidget(self.video_widget, stretch=1)
+        self.video_widget.setMaximumHeight(430)  # Reserve 50px for bottom bar
+        live_layout.addWidget(self.video_widget)
 
         # Compact bottom bar with status and settings button
         bottom_bar = self.create_bottom_bar()
