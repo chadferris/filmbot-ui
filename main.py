@@ -26,13 +26,12 @@ class FilmbotApp(QMainWindow):
         
         # Setup window
         self.setWindowTitle("Filmbot Recording Appliance")
-        
+
         # Set window size for 800x480 touchscreen
         self.resize(800, 480)
-        
-        # For touchscreen, make fullscreen
-        # Uncomment on Raspberry Pi:
-        # self.showFullScreen()
+
+        # Remove window decorations for kiosk mode
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         
         # Create stacked widget for different screens
         self.stack = QStackedWidget()
