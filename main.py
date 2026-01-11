@@ -98,7 +98,8 @@ def main():
         # Set the window to use this screen explicitly
         window.setScreen(primary_screen)
 
-    window.show()
+    # Show fullscreen to hide taskbar
+    window.showFullScreen()
 
     # Run event loop
     sys.exit(app.exec())
