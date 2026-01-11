@@ -63,11 +63,13 @@ class LiveView(QWidget):
 
         video_device = self.config.get_video_device()
         self.video_widget = VideoPreviewWidget(device_path=video_device)
-        self.video_widget.setMaximumHeight(430)  # Reserve 50px for bottom bar
+        # Set fixed height to ensure bottom bar is visible
+        self.video_widget.setFixedHeight(430)
         live_layout.addWidget(self.video_widget)
 
-        # Compact bottom bar with status and settings button
+        # Compact bottom bar with status and settings button (fixed at bottom)
         bottom_bar = self.create_bottom_bar()
+        bottom_bar.setFixedHeight(50)
         live_layout.addWidget(bottom_bar)
 
         # Recording screen
@@ -82,11 +84,11 @@ class LiveView(QWidget):
     def create_bottom_bar(self) -> QWidget:
         """Create compact bottom bar with status and settings button."""
         bar = QWidget()
-        bar.setMaximumHeight(50)
+        bar.setFixedHeight(50)
         bar.setStyleSheet("""
             QWidget {
-                background-color: #f5f5f5;
-                border-radius: 3px;
+                background-color: #2c3e50;
+                border-radius: 0px;
             }
         """)
 
@@ -96,27 +98,27 @@ class LiveView(QWidget):
 
         # Recording status (compact)
         self.recording_label = QLabel("● Idle")
-        self.recording_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #666;")
+        self.recording_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #ecf0f1;")
         layout.addWidget(self.recording_label)
 
         # Separator
         sep1 = QLabel("|")
-        sep1.setStyleSheet("color: #ccc; font-size: 16px;")
+        sep1.setStyleSheet("color: #7f8c8d; font-size: 14px;")
         layout.addWidget(sep1)
 
         # Next recording (compact)
         self.next_recording_label = QLabel("Next: --")
-        self.next_recording_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.next_recording_label.setStyleSheet("font-size: 12px; font-weight: bold; color: #ecf0f1;")
         layout.addWidget(self.next_recording_label)
 
         # Separator
         sep2 = QLabel("|")
-        sep2.setStyleSheet("color: #ccc; font-size: 16px;")
+        sep2.setStyleSheet("color: #7f8c8d; font-size: 14px;")
         layout.addWidget(sep2)
 
         # Storage (compact)
         self.storage_label = QLabel("Storage: --")
-        self.storage_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.storage_label.setStyleSheet("font-size: 12px; font-weight: bold; color: #ecf0f1;")
         layout.addWidget(self.storage_label)
 
         # Spacer to push settings button to the right
