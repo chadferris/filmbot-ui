@@ -44,22 +44,24 @@ class SettingsScreen(QWidget):
         """Setup the UI layout."""
         # Main layout with scroll area
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        
-        # Title
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(5)
+
+        # Title - smaller for compact display
         title = QLabel("Settings")
-        title.setStyleSheet("font-size: 28px; font-weight: bold; color: #2196F3;")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #2196F3;")
         title.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title)
-        
+
         # Scroll area for content
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("QScrollArea { border: none; }")
-        
+
         content_widget = QWidget()
         content_layout = QVBoxLayout(content_widget)
-        content_layout.setSpacing(15)
+        content_layout.setSpacing(8)
+        content_layout.setContentsMargins(3, 3, 3, 3)
         
         # Device settings
         content_layout.addWidget(self.create_device_section())
@@ -78,16 +80,16 @@ class SettingsScreen(QWidget):
         scroll.setWidget(content_widget)
         main_layout.addWidget(scroll)
         
-        # Back button
-        back_btn = QPushButton("← Back to Live View")
-        back_btn.setMinimumHeight(50)
+        # Back button - more compact
+        back_btn = QPushButton("← Back")
+        back_btn.setMinimumHeight(35)
         back_btn.setStyleSheet("""
             QPushButton {
                 background-color: #2196F3;
                 color: white;
                 border: none;
-                border-radius: 5px;
-                font-size: 16px;
+                border-radius: 3px;
+                font-size: 14px;
                 font-weight: bold;
             }
             QPushButton:pressed {
@@ -99,32 +101,42 @@ class SettingsScreen(QWidget):
 
     def create_device_section(self) -> QGroupBox:
         """Create device settings section."""
-        group = QGroupBox("Recording Devices")
-        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
+        group = QGroupBox("Devices")
+        group.setStyleSheet("QGroupBox { font-size: 14px; font-weight: bold; padding-top: 8px; }")
         layout = QVBoxLayout(group)
+        layout.setSpacing(4)
+        layout.setContentsMargins(5, 10, 5, 5)
 
-        # Video device
-        layout.addWidget(QLabel("Video Device:"))
+        # Video device - compact label
+        video_label = QLabel("Video:")
+        video_label.setStyleSheet("font-size: 12px;")
+        layout.addWidget(video_label)
         self.video_device_combo = QComboBox()
-        self.video_device_combo.setMinimumHeight(40)
+        self.video_device_combo.setMinimumHeight(30)
+        self.video_device_combo.setStyleSheet("font-size: 11px;")
         layout.addWidget(self.video_device_combo)
 
-        # Audio device
-        layout.addWidget(QLabel("Audio Device:"))
+        # Audio device - compact label
+        audio_label = QLabel("Audio:")
+        audio_label.setStyleSheet("font-size: 12px;")
+        layout.addWidget(audio_label)
         self.audio_device_combo = QComboBox()
-        self.audio_device_combo.setMinimumHeight(40)
+        self.audio_device_combo.setMinimumHeight(30)
+        self.audio_device_combo.setStyleSheet("font-size: 11px;")
         layout.addWidget(self.audio_device_combo)
 
-        # Buttons
+        # Buttons - smaller
         btn_layout = QHBoxLayout()
 
-        detect_btn = QPushButton("🔍 Detect Devices")
-        detect_btn.setMinimumHeight(40)
+        detect_btn = QPushButton("🔍 Detect")
+        detect_btn.setMinimumHeight(28)
+        detect_btn.setStyleSheet("font-size: 11px;")
         detect_btn.clicked.connect(self.detect_devices)
         btn_layout.addWidget(detect_btn)
 
         save_btn = QPushButton("Save")
-        save_btn.setMinimumHeight(40)
+        save_btn.setMinimumHeight(28)
+        save_btn.setStyleSheet("font-size: 11px;")
         save_btn.clicked.connect(self.save_device_settings)
         btn_layout.addWidget(save_btn)
 
@@ -135,40 +147,42 @@ class SettingsScreen(QWidget):
     def create_drive_section(self) -> QGroupBox:
         """Create Google Drive settings section."""
         group = QGroupBox("Google Drive")
-        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
+        group.setStyleSheet("QGroupBox { font-size: 14px; font-weight: bold; padding-top: 8px; }")
         layout = QVBoxLayout(group)
-        
-        # Remote
+        layout.setSpacing(4)
+        layout.setContentsMargins(5, 10, 5, 5)
+
+        # Remote - compact
         remote_label = QLabel("Remote:")
-        remote_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        remote_label.setStyleSheet("font-size: 12px;")
         layout.addWidget(remote_label)
         self.remote_input = QLineEdit()
-        self.remote_input.setMinimumHeight(50)
-        self.remote_input.setStyleSheet("font-size: 16px; padding: 8px; font-weight: bold;")
+        self.remote_input.setMinimumHeight(30)
+        self.remote_input.setStyleSheet("font-size: 11px; padding: 4px;")
         layout.addWidget(self.remote_input)
-        
-        # Folder
+
+        # Folder - compact with inline browse button
         folder_label = QLabel("Folder:")
-        folder_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        folder_label.setStyleSheet("font-size: 12px;")
         layout.addWidget(folder_label)
 
         folder_row = QHBoxLayout()
+        folder_row.setSpacing(4)
         self.folder_input = QLineEdit()
-        self.folder_input.setMinimumHeight(50)
-        self.folder_input.setStyleSheet("font-size: 16px; padding: 8px; font-weight: bold;")
+        self.folder_input.setMinimumHeight(30)
+        self.folder_input.setStyleSheet("font-size: 11px; padding: 4px;")
         folder_row.addWidget(self.folder_input)
 
-        browse_btn = QPushButton("📁 Browse")
-        browse_btn.setMinimumHeight(50)
-        browse_btn.setFixedWidth(140)
+        browse_btn = QPushButton("📁")
+        browse_btn.setMinimumHeight(30)
+        browse_btn.setFixedWidth(40)
         browse_btn.setStyleSheet("""
             QPushButton {
                 background-color: #FF9800;
                 color: white;
                 border: none;
-                border-radius: 5px;
-                font-size: 16px;
-                font-weight: bold;
+                border-radius: 3px;
+                font-size: 14px;
             }
             QPushButton:pressed {
                 background-color: #F57C00;
@@ -179,121 +193,146 @@ class SettingsScreen(QWidget):
 
         layout.addLayout(folder_row)
 
-        # Buttons
+        # Buttons - smaller
         btn_layout = QHBoxLayout()
 
-        test_btn = QPushButton("Test Connection")
-        test_btn.setMinimumHeight(40)
+        test_btn = QPushButton("Test")
+        test_btn.setMinimumHeight(28)
+        test_btn.setStyleSheet("font-size: 11px;")
         test_btn.clicked.connect(self.test_drive_connection)
         btn_layout.addWidget(test_btn)
 
         save_btn = QPushButton("Save")
-        save_btn.setMinimumHeight(40)
+        save_btn.setMinimumHeight(28)
+        save_btn.setStyleSheet("font-size: 11px;")
         save_btn.clicked.connect(self.save_drive_settings)
         btn_layout.addWidget(save_btn)
-        
+
         layout.addLayout(btn_layout)
-        
+
         return group
     
     def create_schedules_section(self) -> QGroupBox:
         """Create recording schedules section."""
-        group = QGroupBox("Recording Schedules")
-        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
+        group = QGroupBox("Schedules")
+        group.setStyleSheet("QGroupBox { font-size: 14px; font-weight: bold; padding-top: 8px; }")
         layout = QVBoxLayout(group)
-        
-        # Schedule list
+        layout.setSpacing(4)
+        layout.setContentsMargins(5, 10, 5, 5)
+
+        # Schedule list - more compact
         self.schedule_list = QListWidget()
-        self.schedule_list.setMinimumHeight(150)
+        self.schedule_list.setMinimumHeight(80)
+        self.schedule_list.setStyleSheet("font-size: 11px;")
         layout.addWidget(self.schedule_list)
-        
-        # Add schedule form
+
+        # Add schedule form - compact
         form_layout = QHBoxLayout()
-        
+        form_layout.setSpacing(3)
+
         self.day_combo = QComboBox()
         self.day_combo.addItems([
-            "Sunday", "Monday", "Tuesday", "Wednesday",
-            "Thursday", "Friday", "Saturday"
+            "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
         ])
+        self.day_combo.setMinimumHeight(28)
+        self.day_combo.setStyleSheet("font-size: 11px;")
         form_layout.addWidget(self.day_combo)
-        
+
         self.time_edit = QTimeEdit()
         self.time_edit.setDisplayFormat("HH:mm")
         self.time_edit.setTime(QTime(9, 0))
+        self.time_edit.setMinimumHeight(28)
+        self.time_edit.setStyleSheet("font-size: 11px;")
         form_layout.addWidget(self.time_edit)
-        
+
         self.duration_spin = QSpinBox()
         self.duration_spin.setRange(1, 240)
         self.duration_spin.setValue(60)
-        self.duration_spin.setSuffix(" min")
+        self.duration_spin.setSuffix("m")
+        self.duration_spin.setMinimumHeight(28)
+        self.duration_spin.setStyleSheet("font-size: 11px;")
         form_layout.addWidget(self.duration_spin)
-        
+
         layout.addLayout(form_layout)
-        
-        # Buttons
+
+        # Buttons - smaller
         btn_layout = QHBoxLayout()
-        
-        add_btn = QPushButton("+ Add")
+
+        add_btn = QPushButton("+")
+        add_btn.setMinimumHeight(28)
+        add_btn.setFixedWidth(40)
+        add_btn.setStyleSheet("font-size: 14px;")
         add_btn.clicked.connect(self.add_schedule)
         btn_layout.addWidget(add_btn)
-        
-        remove_btn = QPushButton("- Remove")
+
+        remove_btn = QPushButton("-")
+        remove_btn.setMinimumHeight(28)
+        remove_btn.setFixedWidth(40)
+        remove_btn.setStyleSheet("font-size: 14px;")
         remove_btn.clicked.connect(self.remove_schedule)
         btn_layout.addWidget(remove_btn)
-        
+
+        btn_layout.addStretch()
+
         layout.addLayout(btn_layout)
-        
+
         return group
 
     def create_system_section(self) -> QGroupBox:
         """Create system information section."""
-        group = QGroupBox("System Information")
-        group.setStyleSheet("QGroupBox { font-size: 18px; font-weight: bold; }")
+        group = QGroupBox("System")
+        group.setStyleSheet("QGroupBox { font-size: 14px; font-weight: bold; padding-top: 8px; }")
         layout = QVBoxLayout(group)
+        layout.setSpacing(4)
+        layout.setContentsMargins(5, 10, 5, 5)
 
-        # Device name
+        # Device name - compact inline
         name_layout = QHBoxLayout()
-        name_layout.addWidget(QLabel("Device Name:"))
+        name_layout.setSpacing(4)
+        name_label = QLabel("Name:")
+        name_label.setStyleSheet("font-size: 11px;")
+        name_label.setFixedWidth(50)
+        name_layout.addWidget(name_label)
         self.device_name_input = QLineEdit()
-        self.device_name_input.setMinimumHeight(40)
+        self.device_name_input.setMinimumHeight(28)
+        self.device_name_input.setStyleSheet("font-size: 11px;")
         name_layout.addWidget(self.device_name_input)
+
+        save_name_btn = QPushButton("💾")
+        save_name_btn.setMinimumHeight(28)
+        save_name_btn.setFixedWidth(35)
+        save_name_btn.setStyleSheet("font-size: 12px;")
+        save_name_btn.clicked.connect(self.save_device_name)
+        name_layout.addWidget(save_name_btn)
         layout.addLayout(name_layout)
 
-        # Hostname
+        # Info labels - compact
         self.hostname_label = QLabel("Hostname: --")
+        self.hostname_label.setStyleSheet("font-size: 10px;")
         layout.addWidget(self.hostname_label)
 
-        # IP address
-        self.ip_label = QLabel("IP Address: --")
+        self.ip_label = QLabel("IP: --")
+        self.ip_label.setStyleSheet("font-size: 10px;")
         layout.addWidget(self.ip_label)
 
-        # Storage
         self.storage_info_label = QLabel("Storage: --")
+        self.storage_info_label.setStyleSheet("font-size: 10px;")
         layout.addWidget(self.storage_info_label)
 
-        # Kiosk mode (hide taskbar)
-        self.hide_taskbar_checkbox = QCheckBox("Hide taskbar (Kiosk Mode)")
-        self.hide_taskbar_checkbox.setStyleSheet("font-size: 14px; padding: 10px;")
-        layout.addWidget(self.hide_taskbar_checkbox)
+        # Kiosk mode - compact
+        kiosk_layout = QHBoxLayout()
+        kiosk_layout.setSpacing(4)
+        self.hide_taskbar_checkbox = QCheckBox("Kiosk Mode")
+        self.hide_taskbar_checkbox.setStyleSheet("font-size: 11px;")
+        kiosk_layout.addWidget(self.hide_taskbar_checkbox)
 
-        help_label = QLabel("⚠️ Restart app to apply kiosk mode changes")
-        help_label.setStyleSheet("font-size: 12px; color: #666; font-style: italic;")
-        layout.addWidget(help_label)
-
-        # Save buttons
-        btn_layout = QHBoxLayout()
-
-        save_name_btn = QPushButton("Save Device Name")
-        save_name_btn.setMinimumHeight(40)
-        save_name_btn.clicked.connect(self.save_device_name)
-        btn_layout.addWidget(save_name_btn)
-
-        save_ui_btn = QPushButton("Save UI Settings")
-        save_ui_btn.setMinimumHeight(40)
+        save_ui_btn = QPushButton("Apply & Restart")
+        save_ui_btn.setMinimumHeight(28)
+        save_ui_btn.setStyleSheet("font-size: 11px;")
         save_ui_btn.clicked.connect(self.save_ui_settings)
-        btn_layout.addWidget(save_ui_btn)
+        kiosk_layout.addWidget(save_ui_btn)
 
-        layout.addLayout(btn_layout)
+        layout.addLayout(kiosk_layout)
 
         return group
 
@@ -320,9 +359,9 @@ class SettingsScreen(QWidget):
             s.connect(("8.8.8.8", 80))
             ip = s.getsockname()[0]
             s.close()
-            self.ip_label.setText(f"IP Address: {ip}")
+            self.ip_label.setText(f"IP: {ip}")
         except:
-            self.ip_label.setText("IP Address: Not connected")
+            self.ip_label.setText("IP: Not connected")
 
         # Storage info
         self.update_storage_info()
@@ -333,11 +372,16 @@ class SettingsScreen(QWidget):
     def load_schedules(self):
         """Load schedules into list."""
         self.schedule_list.clear()
+        # Map full day names to abbreviations
+        day_abbrev = {
+            'sunday': 'Sun', 'monday': 'Mon', 'tuesday': 'Tue',
+            'wednesday': 'Wed', 'thursday': 'Thu', 'friday': 'Fri', 'saturday': 'Sat'
+        }
         for schedule in self.config.get_schedules():
-            day = schedule['day_of_week'].capitalize()
+            day = day_abbrev.get(schedule['day_of_week'].lower(), schedule['day_of_week'][:3])
             time = schedule['start_time']
             duration = schedule['duration_minutes']
-            text = f"{day} {time} - {duration} min"
+            text = f"{day} {time} ({duration}m)"
 
             item = QListWidgetItem(text)
             item.setData(Qt.UserRole, schedule['id'])
