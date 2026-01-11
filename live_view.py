@@ -63,7 +63,8 @@ class LiveView(QWidget):
 
         video_device = self.config.get_video_device()
         self.video_widget = VideoPreviewWidget(device_path=video_device)
-        # Let video take most space, but not all
+        # Limit video height to leave room for bottom bar (480px window - 30px taskbar - 50px bottom bar = 400px max)
+        self.video_widget.setMaximumHeight(400)
         live_layout.addWidget(self.video_widget, stretch=10)
 
         # Compact bottom bar with status and settings button
