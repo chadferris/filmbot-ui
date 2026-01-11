@@ -30,7 +30,7 @@ class FilmbotApp(QMainWindow):
         # Apply kiosk mode if enabled
         if self.config.get_hide_taskbar():
             # Frameless window to remove decorations
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+            self.setWindowFlags(Qt.FramelessWindowHint)
 
         # Set window size for 800x480 touchscreen
         self.resize(800, 480)
