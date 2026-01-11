@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QStackedWidget
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QStackedWidget, QSizePolicy
 )
 from PySide6.QtGui import QFont
 
@@ -63,14 +63,13 @@ class LiveView(QWidget):
 
         video_device = self.config.get_video_device()
         self.video_widget = VideoPreviewWidget(device_path=video_device)
-        # Set fixed height to ensure bottom bar is visible
-        self.video_widget.setFixedHeight(430)
-        live_layout.addWidget(self.video_widget)
+        # Let video take most space, but not all
+        live_layout.addWidget(self.video_widget, stretch=10)
 
-        # Compact bottom bar with status and settings button (fixed at bottom)
+        # Compact bottom bar with status and settings button
         bottom_bar = self.create_bottom_bar()
-        bottom_bar.setFixedHeight(50)
-        live_layout.addWidget(bottom_bar)
+        # Don't let bottom bar shrink - it needs fixed space
+        live_layout.addWidget(bottom_bar, stretch=0)
 
         # Recording screen
         self.recording_widget = RecordingScreen()
@@ -84,7 +83,10 @@ class LiveView(QWidget):
     def create_bottom_bar(self) -> QWidget:
         """Create compact bottom bar with status and settings button."""
         bar = QWidget()
-        bar.setFixedHeight(50)
+        # Use size policy to prevent shrinking
+        bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        bar.setMinimumHeight(50)
+        bar.setMaximumHeight(50)
         bar.setStyleSheet("""
             QWidget {
                 background-color: #2c3e50;
