@@ -5,6 +5,7 @@ Touchscreen UI for Raspberry Pi 5 with 4.3" display.
 """
 
 import sys
+import subprocess
 from PySide6.QtWidgets import QApplication, QStackedWidget, QMainWindow
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QScreen
@@ -75,6 +76,9 @@ class FilmbotApp(QMainWindow):
 
 def main():
     """Main entry point."""
+    # Hide taskbar while app is running
+    subprocess.Popen(["pkill", "lxpanel"], stderr=subprocess.DEVNULL)
+
     # Create application
     app = QApplication(sys.argv)
 
@@ -102,7 +106,12 @@ def main():
     window.showFullScreen()
 
     # Run event loop
-    sys.exit(app.exec())
+    exit_code = app.exec()
+
+    # Restore taskbar when app closes
+    subprocess.Popen(["lxpanel"], stderr=subprocess.DEVNULL)
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
