@@ -114,23 +114,31 @@ class SettingsScreen(QWidget):
         layout.setSpacing(3)
         layout.setContentsMargins(4, 10, 4, 4)
 
-        # Video device
+        # Video device - inline label
+        video_row = QHBoxLayout()
+        video_row.setSpacing(3)
         video_label = QLabel("Video:")
         video_label.setStyleSheet("font-size: 11px;")
-        layout.addWidget(video_label)
+        video_label.setFixedWidth(45)
+        video_row.addWidget(video_label)
         self.video_device_combo = QComboBox()
         self.video_device_combo.setMinimumHeight(38)
         self.video_device_combo.setStyleSheet("font-size: 10px;")
-        layout.addWidget(self.video_device_combo)
+        video_row.addWidget(self.video_device_combo)
+        layout.addLayout(video_row)
 
-        # Audio device
+        # Audio device - inline label
+        audio_row = QHBoxLayout()
+        audio_row.setSpacing(3)
         audio_label = QLabel("Audio:")
         audio_label.setStyleSheet("font-size: 11px;")
-        layout.addWidget(audio_label)
+        audio_label.setFixedWidth(45)
+        audio_row.addWidget(audio_label)
         self.audio_device_combo = QComboBox()
         self.audio_device_combo.setMinimumHeight(38)
         self.audio_device_combo.setStyleSheet("font-size: 10px;")
-        layout.addWidget(self.audio_device_combo)
+        audio_row.addWidget(self.audio_device_combo)
+        layout.addLayout(audio_row)
 
         # Buttons - taller, stacked vertically
         detect_btn = QPushButton("🔍 Detect")
@@ -155,22 +163,27 @@ class SettingsScreen(QWidget):
         layout.setSpacing(3)
         layout.setContentsMargins(4, 10, 4, 4)
 
-        # Remote
+        # Remote - inline label
+        remote_row = QHBoxLayout()
+        remote_row.setSpacing(3)
         remote_label = QLabel("Remote:")
         remote_label.setStyleSheet("font-size: 11px;")
-        layout.addWidget(remote_label)
+        remote_label.setFixedWidth(55)
+        remote_row.addWidget(remote_label)
         self.remote_input = QLineEdit()
         self.remote_input.setMinimumHeight(38)
         self.remote_input.setStyleSheet("font-size: 10px; padding: 4px;")
-        layout.addWidget(self.remote_input)
+        remote_row.addWidget(self.remote_input)
+        layout.addLayout(remote_row)
 
-        # Folder with browse button
-        folder_label = QLabel("Folder:")
-        folder_label.setStyleSheet("font-size: 11px;")
-        layout.addWidget(folder_label)
-
+        # Folder - inline label with browse button
         folder_row = QHBoxLayout()
         folder_row.setSpacing(3)
+        folder_label = QLabel("Folder:")
+        folder_label.setStyleSheet("font-size: 11px;")
+        folder_label.setFixedWidth(55)
+        folder_row.addWidget(folder_label)
+
         self.folder_input = QLineEdit()
         self.folder_input.setMinimumHeight(38)
         self.folder_input.setStyleSheet("font-size: 10px; padding: 4px;")
