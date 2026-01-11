@@ -27,13 +27,15 @@ class FilmbotApp(QMainWindow):
         # Setup window
         self.setWindowTitle("Filmbot Recording Appliance")
 
-        # Set window size for 800x480 touchscreen
-        self.resize(800, 480)
-
-        # Apply kiosk mode if enabled (just set frameless flag here)
+        # Apply kiosk mode if enabled
         if self.config.get_hide_taskbar():
             # Frameless window to remove decorations
-            self.setWindowFlags(Qt.FramelessWindowHint)
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+
+        # Set window size for 800x480 touchscreen
+        self.resize(800, 480)
+        self.setMinimumSize(800, 480)
+        self.setMaximumSize(800, 480)
         
         # Create stacked widget for different screens
         self.stack = QStackedWidget()
@@ -88,12 +90,13 @@ def main():
 
     # Create and show main window
     window = FilmbotApp()
-    window.show()
 
-    # If kiosk mode is enabled, move window after showing
+    # If kiosk mode is enabled, position at top-left
     if window.config.get_hide_taskbar():
-        window.move(0, 0)
-        window.raise_()  # Bring to front
+        window.setGeometry(0, 0, 800, 480)
+        window.showNormal()
+    else:
+        window.show()
 
     # Run event loop
     sys.exit(app.exec())
