@@ -9,11 +9,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QStackedWidget
 )
 from PySide6.QtGui import QFont
 
 from video_preview import VideoPreviewWidget
+from recording_screen import RecordingScreen
 from config_manager import ConfigManager
 
 
@@ -24,23 +25,24 @@ class LiveView(QWidget):
     
     def __init__(self, config_manager: ConfigManager, parent=None):
         """Initialize live view.
-        
+
         Args:
             config_manager: Configuration manager instance
             parent: Parent widget
         """
         super().__init__(parent)
-        
+
         self.config = config_manager
         self.recording_active = False
-        
+        self.signal_file = Path("/tmp/filmbot-recording")
+
         self.setup_ui()
-        
-        # Update timer - refresh status every 5 seconds
+
+        # Update timer - refresh status every 1 second (faster to detect recording)
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_status)
-        self.update_timer.start(5000)
-        
+        self.update_timer.start(1000)
+
         # Initial status update
         self.update_status()
     
@@ -50,14 +52,31 @@ class LiveView(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
-        # Video preview (main area - maximize this)
+        # Stacked widget to switch between live view and recording screen
+        self.stack = QStackedWidget()
+
+        # Live view with video preview
+        live_widget = QWidget()
+        live_layout = QVBoxLayout(live_widget)
+        live_layout.setContentsMargins(0, 0, 0, 0)
+        live_layout.setSpacing(5)
+
         video_device = self.config.get_video_device()
         self.video_widget = VideoPreviewWidget(device_path=video_device)
-        layout.addWidget(self.video_widget, stretch=1)
+        live_layout.addWidget(self.video_widget, stretch=1)
 
         # Compact bottom bar with status and settings button
         bottom_bar = self.create_bottom_bar()
-        layout.addWidget(bottom_bar)
+        live_layout.addWidget(bottom_bar)
+
+        # Recording screen
+        self.recording_widget = RecordingScreen()
+
+        # Add both to stack
+        self.stack.addWidget(live_widget)
+        self.stack.addWidget(self.recording_widget)
+
+        layout.addWidget(self.stack)
     
     def create_bottom_bar(self) -> QWidget:
         """Create compact bottom bar with status and settings button."""
@@ -127,9 +146,33 @@ class LiveView(QWidget):
     
     def update_status(self):
         """Update all status information."""
+        self.check_recording_signal()
         self.update_recording_status()
         self.update_next_recording()
         self.update_storage_status()
+
+    def check_recording_signal(self):
+        """Check if recording signal file exists and switch screens accordingly."""
+        if self.signal_file.exists():
+            # Recording is active - switch to recording screen
+            if self.stack.currentIndex() != 1:
+                print("Recording signal detected - stopping video preview")
+                self.video_widget.stop_preview()
+                self.stack.setCurrentIndex(1)
+
+                # Try to read filename from signal file
+                try:
+                    with open(self.signal_file, 'r') as f:
+                        filename = Path(f.read().strip()).name
+                        self.recording_widget.set_filename(filename)
+                except:
+                    pass
+        else:
+            # Recording is not active - switch to live view
+            if self.stack.currentIndex() != 0:
+                print("Recording signal cleared - restarting video preview")
+                self.stack.setCurrentIndex(0)
+                self.video_widget.start_preview()
     
     def update_recording_status(self):
         """Update recording status indicator."""

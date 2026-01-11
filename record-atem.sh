@@ -31,9 +31,13 @@ OUTPUT_FILE="$RECORDINGS_DIR/${DEVICE_NAME}_${TIMESTAMP}.mp4"
 echo "$(date): Starting recording - Duration: ${DURATION}s, Output: $OUTPUT_FILE" >> "$LOG_FILE"
 echo "$(date): Video: $VIDEO_DEVICE, Audio: $AUDIO_DEVICE" >> "$LOG_FILE"
 
-# Stop the UI to release the video device
-echo "$(date): Stopping filmbot-ui to release video device..." >> "$LOG_FILE"
-systemctl stop filmbot-ui.service
+# Create signal file to tell UI to stop video preview
+SIGNAL_FILE="/tmp/filmbot-recording"
+echo "$(date): Creating signal file for UI..." >> "$LOG_FILE"
+echo "$OUTPUT_FILE" > "$SIGNAL_FILE"
+
+# Wait 3 seconds for UI to release the video device
+sleep 3
 
 # Record using ffmpeg
 ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 60 -i "$VIDEO_DEVICE" \
@@ -45,6 +49,10 @@ ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 60 -i "$VIDE
        "$OUTPUT_FILE" \
        >> "$LOG_FILE" 2>&1
 
+# Remove signal file to tell UI recording is done
+echo "$(date): Removing signal file..." >> "$LOG_FILE"
+rm -f "$SIGNAL_FILE"
+
 # Check if recording was successful
 if [ $? -eq 0 ]; then
     FILE_SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
@@ -55,17 +63,8 @@ if [ $? -eq 0 ]; then
         echo "$(date): Triggering Google Drive sync..." >> "$LOG_FILE"
         /opt/filmbot-appliance/sync-drive.sh >> "$LOG_FILE" 2>&1 &
     fi
-
-    # Restart the UI
-    echo "$(date): Restarting filmbot-ui..." >> "$LOG_FILE"
-    systemctl start filmbot-ui.service
 else
     echo "$(date): Recording failed with error code $?" >> "$LOG_FILE"
-
-    # Restart the UI even if recording failed
-    echo "$(date): Restarting filmbot-ui after failure..." >> "$LOG_FILE"
-    systemctl start filmbot-ui.service
-
     exit 1
 fi
 

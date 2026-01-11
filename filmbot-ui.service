@@ -10,6 +10,7 @@ Group=filmbot
 Environment=WAYLAND_DISPLAY=wayland-0
 Environment=XDG_RUNTIME_DIR=/run/user/1000
 Environment=QT_QPA_PLATFORM=wayland
+Environment=QT_QPA_WAYLAND_SHELL_INTEGRATION=layer-shell
 WorkingDirectory=/opt/filmbot-appliance/ui
 ExecStart=/opt/filmbot-appliance/ui/venv/bin/python /opt/filmbot-appliance/ui/main.py
 Restart=always

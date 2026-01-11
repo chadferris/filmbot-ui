@@ -78,17 +78,30 @@ def main():
     """Main entry point."""
     # Create application
     app = QApplication(sys.argv)
-    
+
     # Set application style
     app.setStyle("Fusion")
-    
+
     # For touchscreen, enable touch events
-    # app.setAttribute(Qt.AA_SynthesizeTouchForUnhandledMouseEvents, True)
-    
+    app.setAttribute(Qt.AA_SynthesizeTouchForUnhandledMouseEvents, True)
+
     # Create and show main window
     window = FilmbotApp()
-    window.show()
-    
+
+    # Always use Screen 0 (DSI-2 - the physical touchscreen)
+    # This ensures the app appears on the actual display, not Pi Connect virtual display
+    screens = app.screens()
+    if screens:
+        # Use the first screen (DSI-2 800x480 touchscreen)
+        primary_screen = screens[0]
+        print(f"Filmbot: Using screen: {primary_screen.name()} ({primary_screen.geometry().width()}x{primary_screen.geometry().height()})")
+
+        # Set the window to use this screen explicitly
+        window.setScreen(primary_screen)
+        window.showFullScreen()
+    else:
+        window.show()
+
     # Run event loop
     sys.exit(app.exec())
 
