@@ -34,11 +34,17 @@ class FilmbotApp(QMainWindow):
 
         # Set window size for 800x480 touchscreen
         self.resize(800, 480)
-        self.setMinimumSize(800, 480)
-        self.setMaximumSize(800, 480)
-        
+
+        # Store kiosk mode state for later
+        self.kiosk_mode = self.config.get_hide_taskbar()
+
         # Create stacked widget for different screens
         self.stack = QStackedWidget()
+
+        # In kiosk mode, constrain the central widget size
+        if self.kiosk_mode:
+            self.stack.setFixedSize(800, 480)
+
         self.setCentralWidget(self.stack)
         
         # Create screens
@@ -91,10 +97,9 @@ def main():
     # Create and show main window
     window = FilmbotApp()
 
-    # If kiosk mode is enabled, position at top-left
+    # If kiosk mode is enabled, use fullscreen mode
     if window.config.get_hide_taskbar():
-        window.setGeometry(0, 0, 800, 480)
-        window.showNormal()
+        window.showFullScreen()
     else:
         window.show()
 
