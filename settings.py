@@ -5,8 +5,9 @@ Allows configuration changes after initial setup.
 
 import socket
 import subprocess
+import sys
 from pathlib import Path
-from PySide6.QtCore import Qt, Signal, QTime
+from PySide6.QtCore import Qt, Signal, QTime, QTimer
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
@@ -508,11 +509,27 @@ class SettingsScreen(QWidget):
         """Save UI settings."""
         hide_taskbar = self.hide_taskbar_checkbox.isChecked()
         self.config.set_hide_taskbar(hide_taskbar)
-        QMessageBox.information(
-            self,
-            "Success",
-            "UI settings saved!\n\nRestart the app for changes to take effect."
-        )
+
+        # Show message and restart app
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information)
+        msg.setWindowTitle("Success")
+        msg.setText("UI settings saved!\n\nThe app will restart now.")
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec()
+
+        # Restart the application
+        QTimer.singleShot(100, self.restart_application)
+
+    def restart_application(self):
+        """Restart the application."""
+        # Get the main window
+        main_window = self.window()
+        main_window.close()
+
+        # Restart using the same executable and arguments
+        subprocess.Popen([sys.executable] + sys.argv)
+        sys.exit(0)
 
     def load_devices(self):
         """Load device settings into combos."""
