@@ -30,11 +30,10 @@ class FilmbotApp(QMainWindow):
         # Set window size for 800x480 touchscreen
         self.resize(800, 480)
 
-        # Apply kiosk mode if enabled
+        # Apply kiosk mode if enabled (just set frameless flag here)
         if self.config.get_hide_taskbar():
-            # Frameless window positioned at (0,0) to cover taskbar
+            # Frameless window to remove decorations
             self.setWindowFlags(Qt.FramelessWindowHint)
-            self.move(0, 0)
         
         # Create stacked widget for different screens
         self.stack = QStackedWidget()
@@ -90,6 +89,11 @@ def main():
     # Create and show main window
     window = FilmbotApp()
     window.show()
+
+    # If kiosk mode is enabled, move window after showing
+    if window.config.get_hide_taskbar():
+        window.move(0, 0)
+        window.raise_()  # Bring to front
 
     # Run event loop
     sys.exit(app.exec())
