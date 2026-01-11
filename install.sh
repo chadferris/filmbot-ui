@@ -52,7 +52,7 @@ sudo apt install -y python3-full python3-pip python3-venv libgl1 libglib2.0-0 \
     libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0 libdbus-1-3 \
     libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
     libxcb-render-util0 libxcb-shape0 v4l-utils alsa-utils wget curl \
-    ffmpeg rclone parted
+    ffmpeg rclone parted fonts-noto-color-emoji
 
 # Check for video capture devices
 echo ""
