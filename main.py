@@ -29,9 +29,6 @@ class FilmbotApp(QMainWindow):
 
         # Set window size for 800x480 touchscreen
         self.resize(800, 480)
-
-        # Remove window decorations for kiosk mode
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         
         # Create stacked widget for different screens
         self.stack = QStackedWidget()
@@ -97,9 +94,8 @@ def main():
 
         # Set the window to use this screen explicitly
         window.setScreen(primary_screen)
-        window.showFullScreen()
-    else:
-        window.show()
+
+    window.show()
 
     # Run event loop
     sys.exit(app.exec())
