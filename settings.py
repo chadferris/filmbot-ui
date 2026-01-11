@@ -232,11 +232,35 @@ class SettingsScreen(QWidget):
         layout.setSpacing(3)
         layout.setContentsMargins(4, 10, 4, 4)
 
-        # Schedule list
+        # Schedule list with buttons on the right
+        list_row = QHBoxLayout()
+        list_row.setSpacing(3)
+
         self.schedule_list = QListWidget()
         self.schedule_list.setMinimumHeight(70)
         self.schedule_list.setStyleSheet("font-size: 10px;")
-        layout.addWidget(self.schedule_list)
+        list_row.addWidget(self.schedule_list)
+
+        # Buttons on the right side of list
+        btn_col = QVBoxLayout()
+        btn_col.setSpacing(3)
+
+        add_btn = QPushButton("➕")
+        add_btn.setMinimumHeight(32)
+        add_btn.setFixedWidth(40)
+        add_btn.setStyleSheet("font-size: 16px; font-weight: bold;")
+        add_btn.clicked.connect(self.add_schedule)
+        btn_col.addWidget(add_btn)
+
+        remove_btn = QPushButton("➖")
+        remove_btn.setMinimumHeight(32)
+        remove_btn.setFixedWidth(40)
+        remove_btn.setStyleSheet("font-size: 16px; font-weight: bold;")
+        remove_btn.clicked.connect(self.remove_schedule)
+        btn_col.addWidget(remove_btn)
+
+        list_row.addLayout(btn_col)
+        layout.addLayout(list_row)
 
         # Add schedule form - vertical stack for touch
         self.day_combo = QComboBox()
@@ -267,24 +291,6 @@ class SettingsScreen(QWidget):
 
         layout.addLayout(time_dur_layout)
 
-        # Buttons - taller, side by side
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(3)
-
-        add_btn = QPushButton("➕")
-        add_btn.setMinimumHeight(40)
-        add_btn.setStyleSheet("font-size: 16px; font-weight: bold;")
-        add_btn.clicked.connect(self.add_schedule)
-        btn_layout.addWidget(add_btn)
-
-        remove_btn = QPushButton("➖")
-        remove_btn.setMinimumHeight(40)
-        remove_btn.setStyleSheet("font-size: 16px; font-weight: bold;")
-        remove_btn.clicked.connect(self.remove_schedule)
-        btn_layout.addWidget(remove_btn)
-
-        layout.addLayout(btn_layout)
-
         return group
 
     def create_system_section(self) -> QGroupBox:
@@ -295,13 +301,14 @@ class SettingsScreen(QWidget):
         layout.setSpacing(3)
         layout.setContentsMargins(4, 10, 4, 4)
 
-        # Device name
-        name_label = QLabel("Name:")
-        name_label.setStyleSheet("font-size: 11px;")
-        layout.addWidget(name_label)
-
+        # Device name - inline
         name_row = QHBoxLayout()
         name_row.setSpacing(3)
+        name_label = QLabel("Name:")
+        name_label.setStyleSheet("font-size: 11px;")
+        name_label.setFixedWidth(45)
+        name_row.addWidget(name_label)
+
         self.device_name_input = QLineEdit()
         self.device_name_input.setMinimumHeight(38)
         self.device_name_input.setStyleSheet("font-size: 10px;")
@@ -315,30 +322,35 @@ class SettingsScreen(QWidget):
         name_row.addWidget(save_name_btn)
         layout.addLayout(name_row)
 
-        # Info labels - compact
-        self.hostname_label = QLabel("Hostname: --")
+        # Info labels - hostname and IP on same line
+        info_row = QHBoxLayout()
+        self.hostname_label = QLabel("Host: --")
         self.hostname_label.setStyleSheet("font-size: 9px;")
-        layout.addWidget(self.hostname_label)
+        info_row.addWidget(self.hostname_label)
 
         self.ip_label = QLabel("IP: --")
         self.ip_label.setStyleSheet("font-size: 9px;")
-        layout.addWidget(self.ip_label)
+        info_row.addWidget(self.ip_label)
+        layout.addLayout(info_row)
 
         self.storage_info_label = QLabel("Storage: --")
         self.storage_info_label.setStyleSheet("font-size: 9px;")
         layout.addWidget(self.storage_info_label)
 
-        # Kiosk mode - stacked
-        self.hide_taskbar_checkbox = QCheckBox("Kiosk Mode (Hide Taskbar)")
-        self.hide_taskbar_checkbox.setMinimumHeight(35)
+        # Kiosk mode - checkbox and button on same line
+        kiosk_row = QHBoxLayout()
+        kiosk_row.setSpacing(3)
+        self.hide_taskbar_checkbox = QCheckBox("Kiosk")
+        self.hide_taskbar_checkbox.setMinimumHeight(40)
         self.hide_taskbar_checkbox.setStyleSheet("font-size: 11px;")
-        layout.addWidget(self.hide_taskbar_checkbox)
+        kiosk_row.addWidget(self.hide_taskbar_checkbox)
 
-        save_ui_btn = QPushButton("🔄 Apply & Restart")
+        save_ui_btn = QPushButton("🔄 Apply")
         save_ui_btn.setMinimumHeight(40)
-        save_ui_btn.setStyleSheet("font-size: 12px; font-weight: bold;")
+        save_ui_btn.setStyleSheet("font-size: 11px; font-weight: bold;")
         save_ui_btn.clicked.connect(self.save_ui_settings)
-        layout.addWidget(save_ui_btn)
+        kiosk_row.addWidget(save_ui_btn)
+        layout.addLayout(kiosk_row)
 
         return group
 
