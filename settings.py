@@ -10,7 +10,7 @@ from PySide6.QtCore import Qt, Signal, QTime
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
-    QComboBox, QSpinBox, QTimeEdit, QGroupBox, QScrollArea
+    QComboBox, QSpinBox, QTimeEdit, QGroupBox, QScrollArea, QCheckBox
 )
 from PySide6.QtGui import QFont
 
@@ -270,11 +270,29 @@ class SettingsScreen(QWidget):
         self.storage_info_label = QLabel("Storage: --")
         layout.addWidget(self.storage_info_label)
 
-        # Save button
-        save_btn = QPushButton("Save Device Name")
-        save_btn.setMinimumHeight(40)
-        save_btn.clicked.connect(self.save_device_name)
-        layout.addWidget(save_btn)
+        # Kiosk mode (hide taskbar)
+        self.hide_taskbar_checkbox = QCheckBox("Hide taskbar (Kiosk Mode)")
+        self.hide_taskbar_checkbox.setStyleSheet("font-size: 14px; padding: 10px;")
+        layout.addWidget(self.hide_taskbar_checkbox)
+
+        help_label = QLabel("⚠️ Restart app to apply kiosk mode changes")
+        help_label.setStyleSheet("font-size: 12px; color: #666; font-style: italic;")
+        layout.addWidget(help_label)
+
+        # Save buttons
+        btn_layout = QHBoxLayout()
+
+        save_name_btn = QPushButton("Save Device Name")
+        save_name_btn.setMinimumHeight(40)
+        save_name_btn.clicked.connect(self.save_device_name)
+        btn_layout.addWidget(save_name_btn)
+
+        save_ui_btn = QPushButton("Save UI Settings")
+        save_ui_btn.setMinimumHeight(40)
+        save_ui_btn.clicked.connect(self.save_ui_settings)
+        btn_layout.addWidget(save_ui_btn)
+
+        layout.addLayout(btn_layout)
 
         return group
 
@@ -307,6 +325,9 @@ class SettingsScreen(QWidget):
 
         # Storage info
         self.update_storage_info()
+
+        # UI settings
+        self.hide_taskbar_checkbox.setChecked(self.config.get_hide_taskbar())
 
     def load_schedules(self):
         """Load schedules into list."""
@@ -482,6 +503,16 @@ class SettingsScreen(QWidget):
             QMessageBox.information(self, "Success", "Device name saved!")
         else:
             QMessageBox.warning(self, "Error", "Please enter a device name")
+
+    def save_ui_settings(self):
+        """Save UI settings."""
+        hide_taskbar = self.hide_taskbar_checkbox.isChecked()
+        self.config.set_hide_taskbar(hide_taskbar)
+        QMessageBox.information(
+            self,
+            "Success",
+            "UI settings saved!\n\nRestart the app for changes to take effect."
+        )
 
     def load_devices(self):
         """Load device settings into combos."""

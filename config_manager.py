@@ -29,7 +29,10 @@ class ConfigManager:
             "audio_device": "hw:2,0"
         },
         "schedules": [],
-        "device_name": "Filmbot"
+        "device_name": "Filmbot",
+        "ui": {
+            "hide_taskbar": False
+        }
     }
     
     def __init__(self, config_path: Optional[Path] = None):
@@ -185,4 +188,16 @@ class ConfigManager:
         """Get audio device identifier."""
         devices = self.get_devices()
         return devices.get("audio_device", "hw:2,0")
+
+    def get_hide_taskbar(self) -> bool:
+        """Get hide taskbar setting."""
+        ui_config = self._config.get("ui", {})
+        return ui_config.get("hide_taskbar", False)
+
+    def set_hide_taskbar(self, hide: bool):
+        """Set hide taskbar setting."""
+        if "ui" not in self._config:
+            self._config["ui"] = {}
+        self._config["ui"]["hide_taskbar"] = hide
+        self.save()
 
