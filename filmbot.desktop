@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Filmbot
+Comment=Filmbot Recording Appliance
+Exec=/opt/filmbot-appliance/ui/run-ui.sh
+Icon=video-display
+Terminal=false
+Categories=AudioVideo;Recorder;
+StartupNotify=true
+
