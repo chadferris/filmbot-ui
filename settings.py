@@ -67,12 +67,11 @@ class SettingsScreen(QWidget):
         top_row = QHBoxLayout()
         top_row.setSpacing(6)
 
-        # Left column: Devices + System + Email Alerts
+        # Left column: Devices + System
         left_col = QVBoxLayout()
         left_col.setSpacing(6)
         left_col.addWidget(self.create_device_section())
         left_col.addWidget(self.create_system_section())
-        left_col.addWidget(self.create_email_alerts_section())
         top_row.addLayout(left_col)
 
         # Right column: Google Drive + Schedules
@@ -83,6 +82,10 @@ class SettingsScreen(QWidget):
         top_row.addLayout(right_col)
 
         content_layout.addLayout(top_row)
+
+        # Email Alerts - full width row below
+        content_layout.addWidget(self.create_email_alerts_section())
+
         content_layout.addStretch()
         
         scroll.setWidget(content_widget)
