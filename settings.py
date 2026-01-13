@@ -82,26 +82,6 @@ class SettingsScreen(QWidget):
         top_row.addLayout(right_col)
 
         content_layout.addLayout(top_row)
-
-        # Email Alerts button - full width
-        alerts_btn = QPushButton("📧 Email Alerts Settings")
-        alerts_btn.setMinimumHeight(50)
-        alerts_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #FF9800;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                font-size: 16px;
-                font-weight: bold;
-            }
-            QPushButton:pressed {
-                background-color: #F57C00;
-            }
-        """)
-        alerts_btn.clicked.connect(self.open_email_alerts_dialog)
-        content_layout.addWidget(alerts_btn)
-
         content_layout.addStretch()
         
         scroll.setWidget(content_widget)
@@ -371,6 +351,13 @@ class SettingsScreen(QWidget):
         save_ui_btn.clicked.connect(self.save_ui_settings)
         kiosk_row.addWidget(save_ui_btn)
         layout.addLayout(kiosk_row)
+
+        # Email alerts button
+        email_btn = QPushButton("📧 Email Alerts")
+        email_btn.setMinimumHeight(40)
+        email_btn.setStyleSheet("font-size: 11px; font-weight: bold;")
+        email_btn.clicked.connect(self.open_email_alerts_dialog)
+        layout.addWidget(email_btn)
 
         return group
 
