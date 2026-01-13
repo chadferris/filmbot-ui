@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, Signal, QTime
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QComboBox, QSpinBox, QTimeEdit, QListWidget,
-    QListWidgetItem, QMessageBox, QTextEdit, QStackedWidget
+    QListWidgetItem, QMessageBox, QTextEdit, QStackedWidget, QCheckBox
 )
 from PySide6.QtGui import QFont
 
