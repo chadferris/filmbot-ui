@@ -52,7 +52,7 @@ class ConfigManager:
         """
         self.config_path = config_path or CONFIG_PATH
         self._config: Dict[str, Any] = {}
-        self.load()
+        self._config = self.load()
 
     def _deep_merge_defaults(self, config: dict, defaults: dict):
         """Deep merge defaults into config, preserving existing values.
