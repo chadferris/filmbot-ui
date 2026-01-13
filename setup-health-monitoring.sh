@@ -9,12 +9,13 @@ echo "=========================================="
 echo ""
 
 # Check if running as root
-if [ "$EUID" -ne 0 ]; then 
+if [ "$EUID" -ne 0 ]; then
     echo "Please run as root (use sudo)"
     exit 1
 fi
 
 INSTALL_DIR="/opt/filmbot-appliance"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Check if filmbot is installed
 if [ ! -d "$INSTALL_DIR" ]; then
@@ -28,20 +29,21 @@ echo ""
 
 # Copy health check scripts
 echo "→ Copying health check scripts..."
-cp health_check.py "$INSTALL_DIR/"
-cp email_notify.py "$INSTALL_DIR/"
-chmod +x "$INSTALL_DIR/health_check.py"
+cp "$SCRIPT_DIR/health_check.py" "$INSTALL_DIR/ui/"
+cp "$SCRIPT_DIR/email_notify.py" "$INSTALL_DIR/ui/"
+cp "$SCRIPT_DIR/config_manager.py" "$INSTALL_DIR/ui/"
+chmod +x "$INSTALL_DIR/ui/health_check.py"
 
 # Install psutil if not already installed
 echo "→ Installing Python dependencies..."
-"$INSTALL_DIR/venv/bin/pip" install psutil --quiet
+"$INSTALL_DIR/ui/venv/bin/pip" install psutil --quiet
 
 # Install systemd services
 echo "→ Installing systemd services..."
-cp systemd/filmbot-health.service /etc/systemd/system/
-cp systemd/filmbot-health.timer /etc/systemd/system/
-cp systemd/filmbot-daily-report.service /etc/systemd/system/
-cp systemd/filmbot-daily-report.timer /etc/systemd/system/
+cp "$SCRIPT_DIR/systemd/filmbot-health.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/systemd/filmbot-health.timer" /etc/systemd/system/
+cp "$SCRIPT_DIR/systemd/filmbot-daily-report.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/systemd/filmbot-daily-report.timer" /etc/systemd/system/
 
 # Reload systemd
 echo "→ Reloading systemd..."
@@ -73,10 +75,10 @@ echo "     OR edit /opt/filmbot-appliance/config.json"
 echo ""
 echo "Useful commands:"
 echo "  • Test health check:"
-echo "    sudo -u pi $INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/health_check.py --test"
+echo "    sudo -u filmbot $INSTALL_DIR/ui/venv/bin/python3 $INSTALL_DIR/ui/health_check.py --test"
 echo ""
 echo "  • Send test daily report:"
-echo "    sudo -u pi $INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/health_check.py --daily-report"
+echo "    sudo -u filmbot $INSTALL_DIR/ui/venv/bin/python3 $INSTALL_DIR/ui/health_check.py --daily-report"
 echo ""
 echo "  • Check timer status:"
 echo "    systemctl status filmbot-health.timer"

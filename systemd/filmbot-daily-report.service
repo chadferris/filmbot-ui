@@ -5,9 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=pi
-WorkingDirectory=/opt/filmbot-appliance
-ExecStart=/opt/filmbot-appliance/venv/bin/python3 /opt/filmbot-appliance/health_check.py --daily-report
+User=filmbot
+WorkingDirectory=/opt/filmbot-appliance/ui
+ExecStart=/opt/filmbot-appliance/ui/venv/bin/python3 /opt/filmbot-appliance/ui/health_check.py --daily-report
 StandardOutput=journal
 StandardError=journal
 
