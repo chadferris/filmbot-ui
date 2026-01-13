@@ -32,6 +32,15 @@ class ConfigManager:
         "device_name": "Filmbot",
         "ui": {
             "hide_taskbar": False
+        },
+        "alerts": {
+            "enabled": False,
+            "email_from": "",
+            "email_to": [],
+            "smtp_password": "",
+            "daily_report_time": "08:00",
+            "quiet_hours_start": "22:00",
+            "quiet_hours_end": "07:00"
         }
     }
     
@@ -193,6 +202,40 @@ class ConfigManager:
         """Get hide taskbar setting."""
         ui_config = self._config.get("ui", {})
         return ui_config.get("hide_taskbar", False)
+
+    def get_alerts_config(self) -> Dict[str, any]:
+        """Get alerts configuration."""
+        return self._config.get("alerts", self.DEFAULT_CONFIG["alerts"])
+
+    def set_alerts_config(self, enabled: bool, email_from: str, email_to: list,
+                         smtp_password: str, daily_report_time: str = "08:00",
+                         quiet_hours_start: str = "22:00", quiet_hours_end: str = "07:00"):
+        """Set alerts configuration.
+
+        Args:
+            enabled: Whether alerts are enabled
+            email_from: Gmail address to send from (e.g., filmbot@gmail.com)
+            email_to: List of email addresses to send alerts to
+            smtp_password: Gmail app password (16 characters)
+            daily_report_time: Time for daily report (HH:MM format)
+            quiet_hours_start: Start of quiet hours (HH:MM format)
+            quiet_hours_end: End of quiet hours (HH:MM format)
+        """
+        self._config["alerts"] = {
+            "enabled": enabled,
+            "email_from": email_from,
+            "email_to": email_to if isinstance(email_to, list) else [email_to],
+            "smtp_password": smtp_password,
+            "daily_report_time": daily_report_time,
+            "quiet_hours_start": quiet_hours_start,
+            "quiet_hours_end": quiet_hours_end
+        }
+        self.save()
+
+    def is_alerts_enabled(self) -> bool:
+        """Check if alerts are enabled."""
+        alerts = self.get_alerts_config()
+        return alerts.get("enabled", False)
 
     def set_hide_taskbar(self, hide: bool):
         """Set hide taskbar setting."""

@@ -1,0 +1,16 @@
+[Unit]
+Description=Filmbot Daily Health Report
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pi
+WorkingDirectory=/opt/filmbot-appliance
+ExecStart=/opt/filmbot-appliance/venv/bin/python3 /opt/filmbot-appliance/health_check.py --daily-report
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

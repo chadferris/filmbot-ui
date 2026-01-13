@@ -1,0 +1,13 @@
+[Unit]
+Description=Filmbot Health Check Timer
+Requires=filmbot-health.service
+
+[Timer]
+# Run every 5 minutes
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
