@@ -46,14 +46,30 @@ class ConfigManager:
     
     def __init__(self, config_path: Optional[Path] = None):
         """Initialize config manager.
-        
+
         Args:
             config_path: Optional custom config path (for testing)
         """
         self.config_path = config_path or CONFIG_PATH
         self._config: Dict[str, Any] = {}
         self.load()
-    
+
+    def _deep_merge_defaults(self, config: dict, defaults: dict):
+        """Deep merge defaults into config, preserving existing values.
+
+        Args:
+            config: Existing configuration dictionary (modified in place)
+            defaults: Default configuration dictionary
+        """
+        for key, default_value in defaults.items():
+            if key not in config:
+                # Key doesn't exist, add the default
+                config[key] = default_value
+            elif isinstance(default_value, dict) and isinstance(config[key], dict):
+                # Both are dicts, recurse
+                self._deep_merge_defaults(config[key], default_value)
+            # else: key exists and is not a dict, keep existing value
+
     def load(self) -> Dict[str, Any]:
         """Load configuration from file.
         
@@ -67,10 +83,8 @@ class ConfigManager:
         try:
             with open(self.config_path, 'r') as f:
                 self._config = json.load(f)
-            # Ensure all required keys exist
-            for key, value in self.DEFAULT_CONFIG.items():
-                if key not in self._config:
-                    self._config[key] = value
+            # Ensure all required keys exist with deep merge
+            self._deep_merge_defaults(self._config, self.DEFAULT_CONFIG)
             return self._config
         except (json.JSONDecodeError, IOError) as e:
             print(f"Error loading config: {e}")
