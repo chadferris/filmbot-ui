@@ -364,18 +364,32 @@ class SettingsScreen(QWidget):
     def open_email_alerts_dialog(self):
         """Open email alerts configuration dialog."""
         from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QCheckBox, QPushButton, QGridLayout
+        from PySide6.QtCore import Qt
 
         dialog = QDialog(self)
         dialog.setWindowTitle("Email Alerts Settings")
         dialog.setMinimumWidth(700)
         dialog.setMaximumHeight(400)
 
-        # Position at top of screen
-        dialog.move(50, 20)
+        # Set window flags to allow positioning on Wayland
+        dialog.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)
 
         layout = QVBoxLayout(dialog)
         layout.setSpacing(5)
         layout.setContentsMargins(10, 10, 10, 10)
+
+        # Title bar (since we removed window frame)
+        title_bar = QHBoxLayout()
+        title_label = QLabel("📧 Email Alerts Settings")
+        title_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+        title_bar.addWidget(title_label)
+
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(30, 30)
+        close_btn.setStyleSheet("font-size: 16px; background: #f44336; color: white; border-radius: 4px;")
+        close_btn.clicked.connect(dialog.reject)
+        title_bar.addWidget(close_btn)
+        layout.addLayout(title_bar)
 
         # Enable checkbox
         enable_checkbox = QCheckBox("Enable Email Alerts")
@@ -577,6 +591,18 @@ class SettingsScreen(QWidget):
         btn_layout.addWidget(cancel_btn)
 
         layout.addLayout(btn_layout)
+
+        # Show and position at top of screen
+        dialog.show()
+        # Get screen geometry
+        screen = dialog.screen()
+        if screen:
+            screen_geometry = screen.geometry()
+            # Position at top center
+            dialog_width = dialog.width()
+            x = (screen_geometry.width() - dialog_width) // 2
+            y = 20  # 20 pixels from top
+            dialog.move(x, y)
 
         dialog.exec()
 
