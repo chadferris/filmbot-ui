@@ -369,38 +369,39 @@ class SettingsScreen(QWidget):
         dialog = QDialog(self)
         dialog.setWindowTitle("Email Alerts Settings")
         dialog.setMinimumWidth(700)
-        dialog.setMaximumHeight(400)
+        dialog.setMaximumHeight(350)
+        dialog.setFixedHeight(350)
 
-        # Set window flags to allow positioning on Wayland
-        dialog.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)
+        # Set window flags - use Tool window for better positioning control
+        dialog.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
         layout = QVBoxLayout(dialog)
-        layout.setSpacing(5)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(3)
+        layout.setContentsMargins(8, 8, 8, 8)
 
         # Title bar (since we removed window frame)
         title_bar = QHBoxLayout()
         title_label = QLabel("📧 Email Alerts Settings")
-        title_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+        title_label.setStyleSheet("font-size: 13px; font-weight: bold; padding: 3px;")
         title_bar.addWidget(title_label)
 
         close_btn = QPushButton("✕")
-        close_btn.setFixedSize(30, 30)
-        close_btn.setStyleSheet("font-size: 16px; background: #f44336; color: white; border-radius: 4px;")
+        close_btn.setFixedSize(28, 28)
+        close_btn.setStyleSheet("font-size: 14px; background: #f44336; color: white; border-radius: 4px;")
         close_btn.clicked.connect(dialog.reject)
         title_bar.addWidget(close_btn)
         layout.addLayout(title_bar)
 
         # Enable checkbox
         enable_checkbox = QCheckBox("Enable Email Alerts")
-        enable_checkbox.setMinimumHeight(35)
-        enable_checkbox.setStyleSheet("font-size: 12px; font-weight: bold;")
+        enable_checkbox.setMinimumHeight(32)
+        enable_checkbox.setStyleSheet("font-size: 11px; font-weight: bold;")
         layout.addWidget(enable_checkbox)
 
         # Grid layout for compact form
         grid = QGridLayout()
-        grid.setSpacing(5)
-        grid.setContentsMargins(0, 5, 0, 5)
+        grid.setSpacing(3)
+        grid.setContentsMargins(0, 3, 0, 3)
 
         # Email from - label and input on same row
         from_label = QLabel("Gmail:")
@@ -410,8 +411,8 @@ class SettingsScreen(QWidget):
 
         from_input = QLineEdit()
         from_input.setPlaceholderText("filmbot-alerts@gmail.com")
-        from_input.setMinimumHeight(38)
-        from_input.setStyleSheet("font-size: 11px; padding: 3px;")
+        from_input.setMinimumHeight(34)
+        from_input.setStyleSheet("font-size: 10px; padding: 2px;")
         grid.addWidget(from_input, 0, 1)
 
         # Email to - label and input on same row
@@ -422,8 +423,8 @@ class SettingsScreen(QWidget):
 
         to_input = QLineEdit()
         to_input.setPlaceholderText("admin@example.com")
-        to_input.setMinimumHeight(38)
-        to_input.setStyleSheet("font-size: 11px; padding: 3px;")
+        to_input.setMinimumHeight(34)
+        to_input.setStyleSheet("font-size: 10px; padding: 2px;")
         grid.addWidget(to_input, 1, 1)
 
         # Password - label and input on same row
@@ -435,8 +436,8 @@ class SettingsScreen(QWidget):
         pass_input = QLineEdit()
         pass_input.setPlaceholderText("xxxx xxxx xxxx xxxx")
         pass_input.setEchoMode(QLineEdit.Password)
-        pass_input.setMinimumHeight(38)
-        pass_input.setStyleSheet("font-size: 11px; padding: 3px;")
+        pass_input.setMinimumHeight(34)
+        pass_input.setStyleSheet("font-size: 10px; padding: 2px;")
         grid.addWidget(pass_input, 2, 1)
 
         # Help text below password
@@ -465,17 +466,17 @@ class SettingsScreen(QWidget):
 
         # Buttons - compact
         btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(5)
+        btn_layout.setSpacing(4)
 
         test_btn = QPushButton("📧 Test")
-        test_btn.setMinimumHeight(42)
+        test_btn.setMinimumHeight(36)
         test_btn.setStyleSheet("""
             QPushButton {
                 background-color: #2196F3;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
             }
             QPushButton:pressed {
@@ -525,14 +526,14 @@ class SettingsScreen(QWidget):
         btn_layout.addWidget(test_btn)
 
         save_btn = QPushButton("💾 Save")
-        save_btn.setMinimumHeight(42)
+        save_btn.setMinimumHeight(36)
         save_btn.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
             }
             QPushButton:pressed {
@@ -573,14 +574,14 @@ class SettingsScreen(QWidget):
         btn_layout.addWidget(save_btn)
 
         cancel_btn = QPushButton("Cancel")
-        cancel_btn.setMinimumHeight(42)
+        cancel_btn.setMinimumHeight(36)
         cancel_btn.setStyleSheet("""
             QPushButton {
                 background-color: #757575;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
             }
             QPushButton:pressed {
