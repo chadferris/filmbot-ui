@@ -363,59 +363,71 @@ class SettingsScreen(QWidget):
 
     def open_email_alerts_dialog(self):
         """Open email alerts configuration dialog."""
-        from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QCheckBox, QPushButton
+        from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QCheckBox, QPushButton, QGridLayout
 
         dialog = QDialog(self)
         dialog.setWindowTitle("Email Alerts Settings")
-        dialog.setMinimumWidth(600)
-        dialog.setMinimumHeight(500)
+        dialog.setMinimumWidth(700)
+        dialog.setMaximumHeight(400)
 
         layout = QVBoxLayout(dialog)
-        layout.setSpacing(10)
+        layout.setSpacing(5)
+        layout.setContentsMargins(10, 10, 10, 10)
 
         # Enable checkbox
         enable_checkbox = QCheckBox("Enable Email Alerts")
-        enable_checkbox.setMinimumHeight(45)
-        enable_checkbox.setStyleSheet("font-size: 14px; font-weight: bold;")
+        enable_checkbox.setMinimumHeight(35)
+        enable_checkbox.setStyleSheet("font-size: 12px; font-weight: bold;")
         layout.addWidget(enable_checkbox)
 
-        # Email from
-        from_label = QLabel("Gmail Address (for sending alerts):")
-        from_label.setStyleSheet("font-size: 13px; margin-top: 10px;")
-        layout.addWidget(from_label)
+        # Grid layout for compact form
+        grid = QGridLayout()
+        grid.setSpacing(5)
+        grid.setContentsMargins(0, 5, 0, 5)
+
+        # Email from - label and input on same row
+        from_label = QLabel("Gmail:")
+        from_label.setStyleSheet("font-size: 11px;")
+        from_label.setFixedWidth(80)
+        grid.addWidget(from_label, 0, 0)
 
         from_input = QLineEdit()
         from_input.setPlaceholderText("filmbot-alerts@gmail.com")
-        from_input.setMinimumHeight(45)
-        from_input.setStyleSheet("font-size: 14px; padding: 5px;")
-        layout.addWidget(from_input)
+        from_input.setMinimumHeight(38)
+        from_input.setStyleSheet("font-size: 11px; padding: 3px;")
+        grid.addWidget(from_input, 0, 1)
 
-        # Email to
-        to_label = QLabel("Email Address (to receive alerts):")
-        to_label.setStyleSheet("font-size: 13px; margin-top: 10px;")
-        layout.addWidget(to_label)
+        # Email to - label and input on same row
+        to_label = QLabel("Send To:")
+        to_label.setStyleSheet("font-size: 11px;")
+        to_label.setFixedWidth(80)
+        grid.addWidget(to_label, 1, 0)
 
         to_input = QLineEdit()
         to_input.setPlaceholderText("admin@example.com")
-        to_input.setMinimumHeight(45)
-        to_input.setStyleSheet("font-size: 14px; padding: 5px;")
-        layout.addWidget(to_input)
+        to_input.setMinimumHeight(38)
+        to_input.setStyleSheet("font-size: 11px; padding: 3px;")
+        grid.addWidget(to_input, 1, 1)
 
-        # Password
-        pass_label = QLabel("Gmail App Password:")
-        pass_label.setStyleSheet("font-size: 13px; margin-top: 10px;")
-        layout.addWidget(pass_label)
-
-        pass_help = QLabel("Generate at: myaccount.google.com/apppasswords")
-        pass_help.setStyleSheet("font-size: 11px; color: #666;")
-        layout.addWidget(pass_help)
+        # Password - label and input on same row
+        pass_label = QLabel("App Password:")
+        pass_label.setStyleSheet("font-size: 11px;")
+        pass_label.setFixedWidth(80)
+        grid.addWidget(pass_label, 2, 0)
 
         pass_input = QLineEdit()
         pass_input.setPlaceholderText("xxxx xxxx xxxx xxxx")
         pass_input.setEchoMode(QLineEdit.Password)
-        pass_input.setMinimumHeight(45)
-        pass_input.setStyleSheet("font-size: 14px; padding: 5px;")
-        layout.addWidget(pass_input)
+        pass_input.setMinimumHeight(38)
+        pass_input.setStyleSheet("font-size: 11px; padding: 3px;")
+        grid.addWidget(pass_input, 2, 1)
+
+        # Help text below password
+        pass_help = QLabel("Generate at: myaccount.google.com/apppasswords")
+        pass_help.setStyleSheet("font-size: 9px; color: #666;")
+        grid.addWidget(pass_help, 3, 1)
+
+        layout.addLayout(grid)
 
         # Load current settings
         alerts_config = self.config.get_alerts_config()
@@ -434,18 +446,19 @@ class SettingsScreen(QWidget):
         enable_checkbox.toggled.connect(toggle_fields)
         toggle_fields(enable_checkbox.isChecked())
 
-        # Buttons
+        # Buttons - compact
         btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(5)
 
-        test_btn = QPushButton("📧 Test Email")
-        test_btn.setMinimumHeight(50)
+        test_btn = QPushButton("📧 Test")
+        test_btn.setMinimumHeight(42)
         test_btn.setStyleSheet("""
             QPushButton {
                 background-color: #2196F3;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: bold;
             }
             QPushButton:pressed {
@@ -495,14 +508,14 @@ class SettingsScreen(QWidget):
         btn_layout.addWidget(test_btn)
 
         save_btn = QPushButton("💾 Save")
-        save_btn.setMinimumHeight(50)
+        save_btn.setMinimumHeight(42)
         save_btn.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: bold;
             }
             QPushButton:pressed {
@@ -543,14 +556,14 @@ class SettingsScreen(QWidget):
         btn_layout.addWidget(save_btn)
 
         cancel_btn = QPushButton("Cancel")
-        cancel_btn.setMinimumHeight(50)
+        cancel_btn.setMinimumHeight(42)
         cancel_btn.setStyleSheet("""
             QPushButton {
                 background-color: #757575;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: bold;
             }
             QPushButton:pressed {
