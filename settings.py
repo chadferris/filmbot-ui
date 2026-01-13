@@ -370,6 +370,9 @@ class SettingsScreen(QWidget):
         dialog.setMinimumWidth(700)
         dialog.setMaximumHeight(400)
 
+        # Position at top of screen
+        dialog.move(50, 20)
+
         layout = QVBoxLayout(dialog)
         layout.setSpacing(5)
         layout.setContentsMargins(10, 10, 10, 10)
