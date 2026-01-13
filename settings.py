@@ -67,11 +67,12 @@ class SettingsScreen(QWidget):
         top_row = QHBoxLayout()
         top_row.setSpacing(6)
 
-        # Left column: Devices + System
+        # Left column: Devices + System + Email Alerts
         left_col = QVBoxLayout()
         left_col.setSpacing(6)
         left_col.addWidget(self.create_device_section())
         left_col.addWidget(self.create_system_section())
+        left_col.addWidget(self.create_email_alerts_section())
         top_row.addLayout(left_col)
 
         # Right column: Google Drive + Schedules
@@ -354,6 +355,85 @@ class SettingsScreen(QWidget):
 
         return group
 
+    def create_email_alerts_section(self) -> QGroupBox:
+        """Create email alerts settings section."""
+        group = QGroupBox("Email Alerts")
+        group.setStyleSheet("QGroupBox { font-size: 13px; font-weight: bold; padding-top: 8px; }")
+        layout = QVBoxLayout(group)
+        layout.setSpacing(3)
+        layout.setContentsMargins(4, 10, 4, 4)
+
+        # Enable checkbox
+        self.alerts_enabled_checkbox = QCheckBox("Enable Alerts")
+        self.alerts_enabled_checkbox.setMinimumHeight(38)
+        self.alerts_enabled_checkbox.setStyleSheet("font-size: 11px;")
+        self.alerts_enabled_checkbox.toggled.connect(self.toggle_alert_fields)
+        layout.addWidget(self.alerts_enabled_checkbox)
+
+        # Email from
+        from_row = QHBoxLayout()
+        from_row.setSpacing(3)
+        from_label = QLabel("From:")
+        from_label.setStyleSheet("font-size: 11px;")
+        from_label.setFixedWidth(45)
+        from_row.addWidget(from_label)
+        self.alert_from_input = QLineEdit()
+        self.alert_from_input.setPlaceholderText("email@gmail.com")
+        self.alert_from_input.setMinimumHeight(38)
+        self.alert_from_input.setStyleSheet("font-size: 10px; padding: 4px;")
+        from_row.addWidget(self.alert_from_input)
+        layout.addLayout(from_row)
+
+        # Email to
+        to_row = QHBoxLayout()
+        to_row.setSpacing(3)
+        to_label = QLabel("To:")
+        to_label.setStyleSheet("font-size: 11px;")
+        to_label.setFixedWidth(45)
+        to_row.addWidget(to_label)
+        self.alert_to_input = QLineEdit()
+        self.alert_to_input.setPlaceholderText("admin@example.com")
+        self.alert_to_input.setMinimumHeight(38)
+        self.alert_to_input.setStyleSheet("font-size: 10px; padding: 4px;")
+        to_row.addWidget(self.alert_to_input)
+        layout.addLayout(to_row)
+
+        # Password
+        pass_row = QHBoxLayout()
+        pass_row.setSpacing(3)
+        pass_label = QLabel("Pass:")
+        pass_label.setStyleSheet("font-size: 11px;")
+        pass_label.setFixedWidth(45)
+        pass_row.addWidget(pass_label)
+        self.alert_password_input = QLineEdit()
+        self.alert_password_input.setPlaceholderText("App password")
+        self.alert_password_input.setEchoMode(QLineEdit.Password)
+        self.alert_password_input.setMinimumHeight(38)
+        self.alert_password_input.setStyleSheet("font-size: 10px; padding: 4px;")
+        pass_row.addWidget(self.alert_password_input)
+        layout.addLayout(pass_row)
+
+        # Buttons
+        test_btn = QPushButton("📧 Test")
+        test_btn.setMinimumHeight(40)
+        test_btn.setStyleSheet("font-size: 12px; font-weight: bold;")
+        test_btn.clicked.connect(self.test_email_alerts)
+        layout.addWidget(test_btn)
+
+        save_btn = QPushButton("💾 Save")
+        save_btn.setMinimumHeight(40)
+        save_btn.setStyleSheet("font-size: 12px; font-weight: bold;")
+        save_btn.clicked.connect(self.save_email_alerts)
+        layout.addWidget(save_btn)
+
+        return group
+
+    def toggle_alert_fields(self, enabled: bool):
+        """Enable/disable alert input fields."""
+        self.alert_from_input.setEnabled(enabled)
+        self.alert_to_input.setEnabled(enabled)
+        self.alert_password_input.setEnabled(enabled)
+
     def load_settings(self):
         """Load current settings from config."""
         # Device settings
@@ -386,6 +466,15 @@ class SettingsScreen(QWidget):
 
         # UI settings
         self.hide_taskbar_checkbox.setChecked(self.config.get_hide_taskbar())
+
+        # Email alerts
+        alerts_config = self.config.get_alerts_config()
+        self.alerts_enabled_checkbox.setChecked(alerts_config.get('enabled', False))
+        self.alert_from_input.setText(alerts_config.get('email_from', ''))
+        email_to = alerts_config.get('email_to', [])
+        self.alert_to_input.setText(email_to[0] if email_to else '')
+        self.alert_password_input.setText(alerts_config.get('smtp_password', ''))
+        self.toggle_alert_fields(alerts_config.get('enabled', False))
 
     def load_schedules(self):
         """Load schedules into list."""
@@ -641,4 +730,80 @@ class SettingsScreen(QWidget):
             "Success",
             "Device settings saved!\n\nRestart the UI for changes to take effect."
         )
+
+    def save_email_alerts(self):
+        """Save email alerts settings."""
+        enabled = self.alerts_enabled_checkbox.isChecked()
+
+        if enabled:
+            email_from = self.alert_from_input.text().strip()
+            email_to = self.alert_to_input.text().strip()
+            password = self.alert_password_input.text().strip()
+
+            if not email_from or not email_to or not password:
+                QMessageBox.warning(self, "Error", "Please fill in all fields")
+                return
+
+            self.config.set_alerts_config(
+                enabled=True,
+                email_from=email_from,
+                email_to=[email_to],
+                smtp_password=password
+            )
+        else:
+            self.config.set_alerts_config(
+                enabled=False,
+                email_from="",
+                email_to=[],
+                smtp_password=""
+            )
+
+        QMessageBox.information(self, "Success", "Email alerts settings saved!")
+
+    def test_email_alerts(self):
+        """Test email alerts configuration."""
+        if not self.alerts_enabled_checkbox.isChecked():
+            QMessageBox.warning(self, "Error", "Please enable email alerts first")
+            return
+
+        email_from = self.alert_from_input.text().strip()
+        email_to = self.alert_to_input.text().strip()
+        password = self.alert_password_input.text().strip()
+
+        if not email_from or not email_to or not password:
+            QMessageBox.warning(self, "Error", "Please fill in all fields")
+            return
+
+        # Save temporarily
+        self.config.set_alerts_config(
+            enabled=True,
+            email_from=email_from,
+            email_to=[email_to],
+            smtp_password=password
+        )
+
+        # Test sending
+        try:
+            from email_notify import EmailNotifier
+            notifier = EmailNotifier()
+            success = notifier.send_email(
+                subject="Test Email from Filmbot",
+                body="This is a test email. If you receive this, email alerts are working!",
+                priority="info"
+            )
+
+            if success:
+                QMessageBox.information(
+                    self,
+                    "Success",
+                    f"Test email sent to {email_to}!\n\nCheck your inbox (and spam folder)."
+                )
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Failed",
+                    "Failed to send test email. Check your credentials and try again."
+                )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error testing email: {str(e)}")
 

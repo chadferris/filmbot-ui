@@ -112,9 +112,10 @@ class WelcomePage(WizardPage):
         desc = QLabel(
             "This wizard will help you set up your Filmbot recording appliance.\n\n"
             "You will configure:\n"
+            "• Device settings\n"
             "• Google Drive sync destination\n"
             "• Recording schedules\n"
-            "• Device settings"
+            "• Email alerts (optional)"
         )
         desc.setStyleSheet("font-size: 16px; padding: 20px;")
         desc.setWordWrap(True)
@@ -551,6 +552,167 @@ class SchedulePage(WizardPage):
         return True
 
 
+class EmailAlertsPage(WizardPage):
+    """Email alerts configuration page."""
+
+    def __init__(self, config: ConfigManager, parent=None):
+        super().__init__("Email Alerts (Optional)", parent)
+
+        self.config = config
+
+        # Description
+        desc = QLabel(
+            "Configure email alerts to be notified of system issues.\n"
+            "This is optional - you can skip this step and configure it later in Settings."
+        )
+        desc.setStyleSheet("font-size: 14px; padding: 10px;")
+        desc.setWordWrap(True)
+        self.layout.addWidget(desc)
+
+        # Enable checkbox
+        self.enable_checkbox = QCheckBox("Enable Email Alerts")
+        self.enable_checkbox.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.enable_checkbox.toggled.connect(self.toggle_fields)
+        self.layout.addWidget(self.enable_checkbox)
+
+        # Email from
+        from_label = QLabel("Gmail Address (for sending alerts):")
+        from_label.setStyleSheet("font-size: 13px; margin-top: 10px;")
+        self.layout.addWidget(from_label)
+
+        self.email_from_input = QLineEdit()
+        self.email_from_input.setPlaceholderText("filmbot-alerts@gmail.com")
+        self.email_from_input.setMinimumHeight(40)
+        self.email_from_input.setStyleSheet("font-size: 14px; padding: 5px;")
+        self.layout.addWidget(self.email_from_input)
+
+        # Email to
+        to_label = QLabel("Email Address (to receive alerts):")
+        to_label.setStyleSheet("font-size: 13px; margin-top: 10px;")
+        self.layout.addWidget(to_label)
+
+        self.email_to_input = QLineEdit()
+        self.email_to_input.setPlaceholderText("admin@example.com")
+        self.email_to_input.setMinimumHeight(40)
+        self.email_to_input.setStyleSheet("font-size: 14px; padding: 5px;")
+        self.layout.addWidget(self.email_to_input)
+
+        # App password
+        password_label = QLabel("Gmail App Password:")
+        password_label.setStyleSheet("font-size: 13px; margin-top: 10px;")
+        self.layout.addWidget(password_label)
+
+        password_help = QLabel(
+            "Generate at: myaccount.google.com/apppasswords\n"
+            "(Requires 2-Step Verification enabled)"
+        )
+        password_help.setStyleSheet("font-size: 11px; color: #666; margin-bottom: 5px;")
+        self.layout.addWidget(password_help)
+
+        self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("xxxx xxxx xxxx xxxx")
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setMinimumHeight(40)
+        self.password_input.setStyleSheet("font-size: 14px; padding: 5px;")
+        self.layout.addWidget(self.password_input)
+
+        # Test button
+        test_btn = QPushButton("Test Email Configuration")
+        test_btn.setMinimumHeight(45)
+        test_btn.setStyleSheet(self._button_style("#2196F3"))
+        test_btn.clicked.connect(self.test_email)
+        self.layout.addWidget(test_btn)
+
+        self.layout.addStretch()
+        self.add_navigation_buttons(show_back=True, next_text="Next")
+
+        # Initially disable fields
+        self.toggle_fields(False)
+
+    def toggle_fields(self, enabled: bool):
+        """Enable/disable input fields based on checkbox."""
+        self.email_from_input.setEnabled(enabled)
+        self.email_to_input.setEnabled(enabled)
+        self.password_input.setEnabled(enabled)
+
+    def test_email(self):
+        """Test email configuration."""
+        if not self.enable_checkbox.isChecked():
+            QMessageBox.warning(self, "Error", "Please enable email alerts first")
+            return
+
+        email_from = self.email_from_input.text().strip()
+        email_to = self.email_to_input.text().strip()
+        password = self.password_input.text().strip()
+
+        if not email_from or not email_to or not password:
+            QMessageBox.warning(self, "Error", "Please fill in all fields")
+            return
+
+        # Save temporarily and test
+        self.config.set_alerts_config(
+            enabled=True,
+            email_from=email_from,
+            email_to=[email_to],
+            smtp_password=password
+        )
+
+        # Test sending
+        try:
+            from email_notify import EmailNotifier
+            notifier = EmailNotifier()
+            success = notifier.send_email(
+                subject="Test Email from Filmbot",
+                body="This is a test email. If you receive this, email alerts are working!",
+                priority="info"
+            )
+
+            if success:
+                QMessageBox.information(
+                    self,
+                    "Success",
+                    f"Test email sent to {email_to}!\n\nCheck your inbox (and spam folder)."
+                )
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Failed",
+                    "Failed to send test email. Check your credentials and try again."
+                )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error testing email: {str(e)}")
+
+    def validate(self) -> bool:
+        """Validate and save email configuration."""
+        if not self.enable_checkbox.isChecked():
+            # Disable alerts if not enabled
+            self.config.set_alerts_config(
+                enabled=False,
+                email_from="",
+                email_to=[],
+                smtp_password=""
+            )
+            return True
+
+        email_from = self.email_from_input.text().strip()
+        email_to = self.email_to_input.text().strip()
+        password = self.password_input.text().strip()
+
+        if not email_from or not email_to or not password:
+            QMessageBox.warning(self, "Error", "Please fill in all fields or uncheck 'Enable Email Alerts'")
+            return False
+
+        # Save configuration
+        self.config.set_alerts_config(
+            enabled=True,
+            email_from=email_from,
+            email_to=[email_to],
+            smtp_password=password
+        )
+
+        return True
+
+
 class FinishPage(WizardPage):
     """Finish page - apply configuration."""
 
@@ -636,12 +798,14 @@ class SetupWizard(QWidget):
         self.device_page = DevicePage(config)
         self.drive_page = DrivePage(config)
         self.schedule_page = SchedulePage(config)
+        self.email_alerts_page = EmailAlertsPage(config)
         self.finish_page = FinishPage(config)
 
         self.pages.addWidget(self.welcome_page)
         self.pages.addWidget(self.device_page)
         self.pages.addWidget(self.drive_page)
         self.pages.addWidget(self.schedule_page)
+        self.pages.addWidget(self.email_alerts_page)
         self.pages.addWidget(self.finish_page)
 
         # Connect signals
@@ -655,6 +819,9 @@ class SetupWizard(QWidget):
 
         self.schedule_page.next_requested.connect(lambda: self.next_page())
         self.schedule_page.back_requested.connect(lambda: self.prev_page())
+
+        self.email_alerts_page.next_requested.connect(lambda: self.next_page())
+        self.email_alerts_page.back_requested.connect(lambda: self.prev_page())
 
         self.finish_page.next_requested.connect(self.finish)
         self.finish_page.back_requested.connect(lambda: self.prev_page())
