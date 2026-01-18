@@ -24,23 +24,25 @@ class LiveView(QWidget):
     
     def __init__(self, config_manager: ConfigManager, parent=None):
         """Initialize live view.
-        
+
         Args:
             config_manager: Configuration manager instance
             parent: Parent widget
         """
         super().__init__(parent)
-        
+
         self.config = config_manager
         self.recording_active = False
-        
+        self.signal_file_path = Path("/tmp/filmbot-recording")
+        self.video_preview_stopped = False
+
         self.setup_ui()
-        
+
         # Update timer - refresh status every 5 seconds
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_status)
         self.update_timer.start(5000)
-        
+
         # Initial status update
         self.update_status()
     
@@ -127,9 +129,25 @@ class LiveView(QWidget):
     
     def update_status(self):
         """Update all status information."""
+        self.check_signal_file()
         self.update_recording_status()
         self.update_next_recording()
         self.update_storage_status()
+
+    def check_signal_file(self):
+        """Check for recording signal file and manage video preview."""
+        signal_exists = self.signal_file_path.exists()
+
+        if signal_exists and not self.video_preview_stopped:
+            # Recording started - stop video preview to release device
+            print("Recording signal detected - stopping video preview")
+            self.video_widget.stop_preview()
+            self.video_preview_stopped = True
+        elif not signal_exists and self.video_preview_stopped:
+            # Recording finished - restart video preview
+            print("Recording signal cleared - restarting video preview")
+            self.video_widget.start_preview()
+            self.video_preview_stopped = False
     
     def update_recording_status(self):
         """Update recording status indicator."""
