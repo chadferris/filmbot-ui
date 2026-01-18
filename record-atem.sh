@@ -2,7 +2,8 @@
 # Filmbot ATEM Recording Script
 # Records video from ATEM Mini and saves to NVMe storage
 
-set -e
+# Don't use set -e so we can clean up signal file even on failure
+set +e
 
 # Configuration
 DURATION=${1:-3600}  # Duration in seconds (default 1 hour)
@@ -49,12 +50,15 @@ ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 60 -i "$VIDE
        "$OUTPUT_FILE" \
        >> "$LOG_FILE" 2>&1
 
-# Remove signal file to tell UI recording is done
+# Capture ffmpeg exit code
+FFMPEG_EXIT=$?
+
+# ALWAYS remove signal file to tell UI recording is done
 echo "$(date): Removing signal file..." >> "$LOG_FILE"
 rm -f "$SIGNAL_FILE"
 
 # Check if recording was successful
-if [ $? -eq 0 ]; then
+if [ $FFMPEG_EXIT -eq 0 ]; then
     FILE_SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
     echo "$(date): Recording completed successfully - Size: $FILE_SIZE" >> "$LOG_FILE"
 
@@ -64,7 +68,7 @@ if [ $? -eq 0 ]; then
         /opt/filmbot-appliance/sync-drive.sh >> "$LOG_FILE" 2>&1 &
     fi
 else
-    echo "$(date): Recording failed with error code $?" >> "$LOG_FILE"
+    echo "$(date): Recording failed with error code $FFMPEG_EXIT" >> "$LOG_FILE"
     exit 1
 fi
 
