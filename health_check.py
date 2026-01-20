@@ -131,32 +131,47 @@ class HealthChecker:
             }
     
     def check_network(self) -> Tuple[str, Dict]:
-        """Check network connectivity.
-        
+        """Check network connectivity with retry logic.
+
         Returns:
             Tuple of (status, details)
         """
-        try:
-            # Check internet connectivity
-            result = subprocess.run(
-                ['ping', '-c', '1', '-W', '2', '8.8.8.8'],
-                capture_output=True,
-                timeout=3
-            )
-            
-            if result.returncode == 0:
-                return 'ok', {'Network': 'Online ✅'}
-            else:
-                return 'warning', {
-                    'Issue': 'No internet connectivity',
-                    'Action': 'Check WiFi connection'
-                }
-                
-        except Exception as e:
-            return 'warning', {
-                'Issue': 'Failed to check network',
-                'Error': str(e)
-            }
+        max_retries = 3
+        retry_delay = 1  # seconds
+
+        for attempt in range(max_retries):
+            try:
+                # Check internet connectivity with longer timeout
+                result = subprocess.run(
+                    ['ping', '-c', '1', '-W', '5', '8.8.8.8'],
+                    capture_output=True,
+                    timeout=6
+                )
+
+                if result.returncode == 0:
+                    return 'ok', {'Network': 'Online ✅'}
+
+                # If not last attempt, wait before retry
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(retry_delay)
+
+            except Exception as e:
+                # If not last attempt, wait before retry
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(retry_delay)
+                else:
+                    return 'warning', {
+                        'Issue': 'Failed to check network',
+                        'Error': str(e)
+                    }
+
+        # All retries failed
+        return 'warning', {
+            'Issue': 'No internet connectivity after 3 attempts',
+            'Action': 'Check WiFi connection'
+        }
     
     def check_system_resources(self) -> Tuple[str, Dict]:
         """Check CPU, memory, and temperature.
