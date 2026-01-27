@@ -376,13 +376,20 @@ class LiveView(QWidget):
 
         # Convert to dB (reference: 32768 = 0 dB for 16-bit audio)
         if rms > 0:
-            db = 20 * (rms / 32768.0) ** 0.5 * 100  # Scale to 0-100 for progress bar
-            db_value = 20 * ((rms / 32768.0) ** 0.5) - 60  # Actual dB value (-60 to 0 range)
+            # Calculate dB: 20 * log10(rms / max_value)
+            # For 16-bit audio, max value is 32768
+            import math
+            db_value = 20 * math.log10(rms / 32768.0)
+
+            # Scale dB to 0-100 for progress bar
+            # Typical range: -60 dB (silence) to 0 dB (max)
+            # Map -60 to 0, and 0 to 100
+            db_scaled = ((db_value + 60) / 60) * 100
 
             # Clamp to 0-100 for progress bar
-            db = max(0, min(100, db))
+            db_scaled = max(0, min(100, db_scaled))
 
-            self.audio_meter.setValue(int(db))
+            self.audio_meter.setValue(int(db_scaled))
             self.audio_db_label.setText(f"{db_value:.1f} dB")
         else:
             self.audio_meter.setValue(0)
