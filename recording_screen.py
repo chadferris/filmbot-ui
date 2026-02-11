@@ -3,21 +3,23 @@ Recording in progress screen for Filmbot appliance.
 Displays animated recording indicator when recording is active.
 """
 
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
 from PySide6.QtGui import QFont
 
 
 class RecordingScreen(QWidget):
     """Screen shown during active recording."""
-    
+
+    stop_recording_requested = Signal()
+
     def __init__(self, parent=None):
         """Initialize recording screen."""
         super().__init__(parent)
-        
+
         self.blink_state = False
         self.setup_ui()
-        
+
         # Blink timer for recording indicator
         self.blink_timer = QTimer()
         self.blink_timer.timeout.connect(self.toggle_blink)
@@ -58,6 +60,30 @@ class RecordingScreen(QWidget):
         self.info_label.setFont(font)
         self.info_label.setStyleSheet("color: #999; margin-top: 40px;")
         layout.addWidget(self.info_label)
+
+        # Add spacer
+        layout.addStretch()
+
+        # Stop button
+        stop_btn = QPushButton("⏹ Stop Recording")
+        stop_btn.setFixedHeight(60)
+        stop_btn.setMinimumWidth(300)
+        stop_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ff5722;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 10px 20px;
+            }
+            QPushButton:pressed {
+                background-color: #e64a19;
+            }
+        """)
+        stop_btn.clicked.connect(self.stop_recording_requested.emit)
+        layout.addWidget(stop_btn, alignment=Qt.AlignCenter)
     
     def toggle_blink(self):
         """Toggle the blinking recording indicator."""
