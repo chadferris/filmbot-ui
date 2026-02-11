@@ -37,9 +37,6 @@ class LiveView(QWidget):
         self.recording_active = False
         self.signal_file = Path("/tmp/filmbot-recording")
 
-        # Manual recording process
-        self.manual_recording_process = None
-
         # Audio monitoring
         self.audio_process = None
         self.audio_buffer = bytearray()
@@ -264,6 +261,11 @@ class LiveView(QWidget):
             if self.stack.currentIndex() != 0:
                 print("Recording signal cleared - restarting video preview and audio monitoring")
                 self.stack.setCurrentIndex(0)
+
+                # Update video device path from config (in case it changed)
+                video_device = self.config.get_video_device()
+                self.video_widget.device_path = video_device
+
                 self.video_widget.start_preview()
                 self.start_audio_monitoring()
     
@@ -422,50 +424,22 @@ class LiveView(QWidget):
 
     def start_manual_recording(self):
         """Start a manual recording (1 hour duration)."""
-        if self.manual_recording_process is not None:
-            print("Recording already in progress")
-            return
-
-        # Start recording script in background (3600 seconds = 1 hour)
-        self.manual_recording_process = QProcess(self)
-        self.manual_recording_process.finished.connect(self.on_manual_recording_finished)
-
-        # Run the recording script
-        self.manual_recording_process.start('/opt/filmbot-appliance/record-atem.sh', ['3600'])
-
+        # Just call the recording script - it handles everything
+        # The script creates the signal file, UI detects it and switches screens
+        subprocess.Popen(['/opt/filmbot-appliance/record-atem.sh', '3600'])
         print("Manual recording started (1 hour duration)")
 
     def stop_manual_recording(self):
-        """Stop the manual recording."""
-        if self.manual_recording_process is None:
-            print("No manual recording in progress")
-            return
-
-        # Kill the recording process
-        self.manual_recording_process.kill()
-        self.manual_recording_process.waitForFinished(2000)
-
-        # Clean up signal file
-        if self.signal_file.exists():
-            self.signal_file.unlink()
-
-        print("Manual recording stopped")
-
-    def on_manual_recording_finished(self, exit_code, exit_status):
-        """Handle manual recording process completion."""
-        print(f"Manual recording finished with exit code {exit_code}")
-        self.manual_recording_process = None
+        """Stop the manual recording by killing ffmpeg."""
+        # Kill any running ffmpeg processes
+        # The record-atem.sh script will detect ffmpeg died and clean up the signal file
+        subprocess.run(['pkill', '-SIGTERM', 'ffmpeg'], check=False)
+        print("Sent stop signal to recording")
 
     def closeEvent(self, event):
         """Handle widget close event."""
         self.update_timer.stop()
         self.audio_timer.stop()
         self.stop_audio_monitoring()
-
-        # Stop manual recording if active
-        if self.manual_recording_process is not None:
-            self.manual_recording_process.kill()
-            self.manual_recording_process.waitForFinished(1000)
-
         super().closeEvent(event)
 
