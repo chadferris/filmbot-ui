@@ -17,6 +17,16 @@ def detect_video_devices() -> List[Tuple[str, str]]:
     """
     devices = []
 
+    # Devices to exclude (Raspberry Pi internal encoders/decoders/ISP)
+    exclude_names = [
+        'pispbe',
+        'rp1-cfe',
+        'rpi-hevc-dec',
+        'rpivid',
+        'bcm2835-codec',
+        'bcm2835-isp'
+    ]
+
     # Check /dev/video* devices
     video_devices = sorted(Path("/dev").glob("video*"))
 
@@ -31,21 +41,20 @@ def detect_video_devices() -> List[Tuple[str, str]]:
             )
 
             if result.returncode == 0:
-                # Only include devices with video capture capability
-                # Skip encoder/codec devices (pispbe, rp1-cfe, etc.)
-                if 'Video Capture' not in result.stdout:
-                    continue
-
-                # Skip metadata capture devices
-                if 'Metadata Capture' in result.stdout and 'Video Capture' not in result.stdout:
-                    continue
-
                 # Parse device name from output
                 name_match = re.search(r'Card type\s*:\s*(.+)', result.stdout)
                 if name_match:
                     device_name = name_match.group(1).strip()
                 else:
                     device_name = f"Video Device {device_path.name}"
+
+                # Skip excluded devices (Pi internal hardware)
+                if any(exclude in device_name.lower() for exclude in exclude_names):
+                    continue
+
+                # Only include devices with video capture capability
+                if 'Video Capture' not in result.stdout:
+                    continue
 
                 devices.append((str(device_path), device_name))
         except (subprocess.TimeoutExpired, FileNotFoundError):
