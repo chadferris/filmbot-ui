@@ -10,43 +10,52 @@ from typing import List, Tuple
 
 
 def detect_video_devices() -> List[Tuple[str, str]]:
-    """Detect available V4L2 video devices.
-    
+    """Detect available V4L2 video capture devices.
+
     Returns:
         List of (device_path, device_name) tuples
     """
     devices = []
-    
+
     # Check /dev/video* devices
     video_devices = sorted(Path("/dev").glob("video*"))
-    
+
     for device_path in video_devices:
         try:
-            # Use v4l2-ctl to get device info
+            # Use v4l2-ctl to get device info and capabilities
             result = subprocess.run(
-                ['v4l2-ctl', '--device', str(device_path), '--info'],
+                ['v4l2-ctl', '--device', str(device_path), '--all'],
                 capture_output=True,
                 text=True,
                 timeout=2
             )
-            
+
             if result.returncode == 0:
+                # Only include devices with video capture capability
+                # Skip encoder/codec devices (pispbe, rp1-cfe, etc.)
+                if 'Video Capture' not in result.stdout:
+                    continue
+
+                # Skip metadata capture devices
+                if 'Metadata Capture' in result.stdout and 'Video Capture' not in result.stdout:
+                    continue
+
                 # Parse device name from output
                 name_match = re.search(r'Card type\s*:\s*(.+)', result.stdout)
                 if name_match:
                     device_name = name_match.group(1).strip()
                 else:
                     device_name = f"Video Device {device_path.name}"
-                
+
                 devices.append((str(device_path), device_name))
         except (subprocess.TimeoutExpired, FileNotFoundError):
-            # v4l2-ctl not available or timeout
-            devices.append((str(device_path), f"Video Device {device_path.name}"))
-    
+            # v4l2-ctl not available or timeout - skip this device
+            pass
+
     # Fallback if no devices found
     if not devices:
         devices.append(("/dev/video5", "Default Video Device (not detected)"))
-    
+
     return devices
 
 
