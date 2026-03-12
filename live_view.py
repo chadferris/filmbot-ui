@@ -430,11 +430,11 @@ class LiveView(QWidget):
         print("Manual recording started (1 hour duration)")
 
     def stop_manual_recording(self):
-        """Stop the manual recording by killing ffmpeg."""
-        # Kill any running ffmpeg processes
-        # The record-atem.sh script will detect ffmpeg died and clean up the signal file
-        subprocess.run(['pkill', '-SIGTERM', 'ffmpeg'], check=False)
-        print("Sent stop signal to recording")
+        """Stop the manual recording by gracefully stopping ffmpeg."""
+        # Send SIGINT (Ctrl+C) to ffmpeg so it can finalize the file properly
+        # This is the same as pressing 'q' - ffmpeg will finish writing headers
+        subprocess.run(['pkill', '-SIGINT', 'ffmpeg'], check=False)
+        print("Sent graceful stop signal to recording (ffmpeg will finalize file)")
 
     def closeEvent(self, event):
         """Handle widget close event."""
