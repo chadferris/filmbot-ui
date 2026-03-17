@@ -755,20 +755,19 @@ class FinishPage(WizardPage):
         self.log(f"Drive: {drive_config['remote']}{drive_config['folder']}")
 
         # Create systemd services for schedules
-        systemd_mgr = SystemdManager(dry_run=True)  # Use dry_run for safety
+        systemd_mgr = SystemdManager(dry_run=False)
 
         schedules = self.config.get_schedules()
         self.log(f"\nCreating {len(schedules)} recording schedule(s)...")
 
         for schedule in schedules:
             self.log(f"  - {schedule['day_of_week']} {schedule['start_time']} ({schedule['duration_minutes']} min)")
-            # In production, remove dry_run
-            # systemd_mgr.create_schedule_services(schedule)
+            systemd_mgr.create_schedule_services(schedule)
 
         # Mark as initialized
         self.config.set_initialized(True)
         self.log("\n✓ Configuration saved!")
-        self.log("\nNote: Systemd services will be created on the Raspberry Pi.")
+        self.log("\n✓ Systemd timers created!")
 
         return True
 

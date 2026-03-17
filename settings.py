@@ -35,7 +35,7 @@ class SettingsScreen(QWidget):
         super().__init__(parent)
         
         self.config = config
-        self.systemd_mgr = SystemdManager(dry_run=True)
+        self.systemd_mgr = SystemdManager(dry_run=False)
         
         self.setup_ui()
         self.load_settings()
@@ -806,12 +806,13 @@ class SettingsScreen(QWidget):
         schedule_id = current_item.data(Qt.UserRole)
 
         # Remove systemd service
-        # Note: In production, remove dry_run
-        # self.systemd_mgr.remove_schedule_services(schedule_id)
+        if not self.systemd_mgr.remove_schedule_services(schedule_id):
+            QMessageBox.warning(self, "Error", "Failed to remove systemd timer")
+            return
 
         self.config.remove_schedule(schedule_id)
         self.load_schedules()
-        QMessageBox.information(self, "Success", "Schedule removed!")
+        QMessageBox.information(self, "Success", "Schedule and timer removed!")
 
     def save_device_name(self):
         """Save device name."""
