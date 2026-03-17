@@ -788,11 +788,13 @@ class SettingsScreen(QWidget):
             'enabled': True
         }
 
-        # Note: In production, remove dry_run
-        # self.systemd_mgr.create_schedule_services(schedule)
+        # Create the systemd timer for this schedule
+        if not self.systemd_mgr.create_schedule_services(schedule):
+            QMessageBox.warning(self, "Error", "Failed to create systemd timer for schedule")
+            return
 
         self.load_schedules()
-        QMessageBox.information(self, "Success", "Schedule added!")
+        QMessageBox.information(self, "Success", "Schedule added and timer created!")
 
     def remove_schedule(self):
         """Remove selected schedule."""
