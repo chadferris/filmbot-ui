@@ -100,24 +100,31 @@ WantedBy=timers.target
     
     def _day_to_calendar(self, day_of_week: str, start_time: str) -> str:
         """Convert day and time to systemd OnCalendar format.
-        
+
         Args:
-            day_of_week: Day name (e.g., 'sunday', 'monday')
+            day_of_week: Day name (e.g., 'sunday', 'monday', 'sun', 'mon')
             start_time: Time in HH:MM format
-            
+
         Returns:
             OnCalendar string (e.g., 'Sun 09:20')
         """
         day_map = {
             'monday': 'Mon',
+            'mon': 'Mon',
             'tuesday': 'Tue',
+            'tue': 'Tue',
             'wednesday': 'Wed',
+            'wed': 'Wed',
             'thursday': 'Thu',
+            'thu': 'Thu',
             'friday': 'Fri',
+            'fri': 'Fri',
             'saturday': 'Sat',
-            'sunday': 'Sun'
+            'sat': 'Sat',
+            'sunday': 'Sun',
+            'sun': 'Sun'
         }
-        
+
         day_abbr = day_map.get(day_of_week.lower(), 'Sun')
         return f"{day_abbr} {start_time}"
     
