@@ -135,18 +135,27 @@ class ConfigManager:
     
     def add_schedule(self, day_of_week: str, start_time: str, duration_minutes: int) -> str:
         """Add a new recording schedule.
-        
+
         Args:
             day_of_week: Day name (e.g., 'sunday', 'monday')
             start_time: Start time in HH:MM format
             duration_minutes: Duration in minutes
-            
+
         Returns:
             Schedule ID
         """
         schedules = self.get_schedules()
-        # Generate unique ID
-        schedule_id = f"service-{len(schedules) + 1}"
+        # Generate unique ID based on highest existing ID
+        max_id = 0
+        for schedule in schedules:
+            # Extract number from "service-N" format
+            if schedule['id'].startswith('service-'):
+                try:
+                    num = int(schedule['id'].split('-')[1])
+                    max_id = max(max_id, num)
+                except (ValueError, IndexError):
+                    pass
+        schedule_id = f"service-{max_id + 1}"
         
         schedule = {
             "id": schedule_id,

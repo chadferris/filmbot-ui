@@ -69,12 +69,12 @@ WantedBy=timers.target
             return False
     
     def _write_file(self, path: Path, content: str) -> bool:
-        """Write content to file.
-        
+        """Write content to file using sudo.
+
         Args:
             path: File path
             content: File content
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -82,13 +82,20 @@ WantedBy=timers.target
             print(f"[DRY RUN] Would write to {path}:")
             print(content)
             return True
-        
+
         try:
-            with open(path, 'w') as f:
-                f.write(content)
+            # Use sudo tee to write the file with elevated permissions
+            result = subprocess.run(
+                ['sudo', 'tee', str(path)],
+                input=content,
+                capture_output=True,
+                text=True,
+                check=True
+            )
             return True
-        except IOError as e:
+        except subprocess.CalledProcessError as e:
             print(f"Error writing file {path}: {e}")
+            print(f"stderr: {e.stderr}")
             return False
     
     def _day_to_calendar(self, day_of_week: str, start_time: str) -> str:
@@ -164,26 +171,26 @@ WantedBy=timers.target
     
     def remove_schedule_services(self, schedule_id: str) -> bool:
         """Remove systemd service and timer files for a schedule.
-        
+
         Args:
             schedule_id: Schedule ID
-            
+
         Returns:
             True if successful, False otherwise
         """
         # Stop and disable timer
         self._run_command(['sudo', 'systemctl', 'stop', f"filmbot-record-{schedule_id}.timer"])
         self._run_command(['sudo', 'systemctl', 'disable', f"filmbot-record-{schedule_id}.timer"])
-        
-        # Remove files
+
+        # Remove files using sudo
         service_path = self.SYSTEMD_PATH / f"filmbot-record-{schedule_id}.service"
         timer_path = self.SYSTEMD_PATH / f"filmbot-record-{schedule_id}.timer"
-        
+
         if service_path.exists():
-            service_path.unlink()
+            self._run_command(['sudo', 'rm', str(service_path)])
         if timer_path.exists():
-            timer_path.unlink()
-        
+            self._run_command(['sudo', 'rm', str(timer_path)])
+
         # Reload systemd
         return self._run_command(['sudo', 'systemctl', 'daemon-reload'])
 
