@@ -20,25 +20,24 @@ ATEM_DEVICE_IP="192.168.100.2"
 
 echo "Configuring $ATEM_INTERFACE with static IP $ATEM_IP..."
 
-# Configure NetworkManager to use manual IP on eth0
-nmcli connection modify "Wired connection 1" ipv4.method manual 2>/dev/null || {
-    # If "Wired connection 1" doesn't exist, create it
-    echo "Creating new connection profile..."
-    nmcli connection add type ethernet ifname $ATEM_INTERFACE con-name "ATEM Network"
-    nmcli connection modify "ATEM Network" ipv4.method manual
-    nmcli connection modify "ATEM Network" ipv4.addresses $ATEM_IP
-    nmcli connection modify "ATEM Network" connection.autoconnect yes
-    nmcli connection up "ATEM Network"
-}
-
-# If "Wired connection 1" exists, configure it
-nmcli connection show "Wired connection 1" >/dev/null 2>&1 && {
-    nmcli connection modify "Wired connection 1" ipv4.method manual
+# Check if "Wired connection 1" exists
+if nmcli connection show "Wired connection 1" >/dev/null 2>&1; then
+    echo "Using existing 'Wired connection 1' profile..."
+    # Set IP address first, then method
     nmcli connection modify "Wired connection 1" ipv4.addresses $ATEM_IP
+    nmcli connection modify "Wired connection 1" ipv4.method manual
     nmcli connection modify "Wired connection 1" connection.autoconnect yes
     nmcli connection down "Wired connection 1" 2>/dev/null || true
     nmcli connection up "Wired connection 1"
-}
+else
+    # Create new connection profile
+    echo "Creating new 'ATEM Network' profile..."
+    nmcli connection add type ethernet ifname $ATEM_INTERFACE con-name "ATEM Network" \
+        ipv4.method manual \
+        ipv4.addresses $ATEM_IP \
+        connection.autoconnect yes
+    nmcli connection up "ATEM Network"
+fi
 
 echo "Waiting for interface to come up..."
 sleep 3

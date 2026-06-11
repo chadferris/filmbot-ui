@@ -788,14 +788,15 @@ class FinishPage(WizardPage):
 
         try:
             # Configure NetworkManager to use static IP on eth0
+            # Set IP address FIRST, then method (nmcli requirement)
             subprocess.run([
                 'sudo', 'nmcli', 'connection', 'modify', 'Wired connection 1',
-                'ipv4.method', 'manual'
+                'ipv4.addresses', '192.168.100.3/24'
             ], check=True, capture_output=True)
 
             subprocess.run([
                 'sudo', 'nmcli', 'connection', 'modify', 'Wired connection 1',
-                'ipv4.addresses', '192.168.100.3/24'
+                'ipv4.method', 'manual'
             ], check=True, capture_output=True)
 
             subprocess.run([
