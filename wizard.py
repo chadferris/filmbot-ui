@@ -750,9 +750,16 @@ class FinishPage(WizardPage):
         self.status_text.clear()
         self.log("Applying configuration...")
 
+        # Configure ATEM network interface (eth0)
+        self.log("\nConfiguring ATEM network interface...")
+        if self.configure_atem_network():
+            self.log("✓ ATEM network configured (eth0: 192.168.100.3)")
+        else:
+            self.log("⚠ ATEM network configuration failed (you may need to run setup-atem-network.sh manually)")
+
         # Update sync script with new Drive path
         drive_config = self.config.get_drive_config()
-        self.log(f"Drive: {drive_config['remote']}{drive_config['folder']}")
+        self.log(f"\nDrive: {drive_config['remote']}{drive_config['folder']}")
 
         # Create systemd services for schedules
         systemd_mgr = SystemdManager(dry_run=False)
@@ -770,6 +777,45 @@ class FinishPage(WizardPage):
         self.log("\n✓ Systemd timers created!")
 
         return True
+
+    def configure_atem_network(self) -> bool:
+        """Configure eth0 with static IP for ATEM communication.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        import subprocess
+
+        try:
+            # Configure NetworkManager to use static IP on eth0
+            subprocess.run([
+                'sudo', 'nmcli', 'connection', 'modify', 'Wired connection 1',
+                'ipv4.method', 'manual'
+            ], check=True, capture_output=True)
+
+            subprocess.run([
+                'sudo', 'nmcli', 'connection', 'modify', 'Wired connection 1',
+                'ipv4.addresses', '192.168.100.3/24'
+            ], check=True, capture_output=True)
+
+            subprocess.run([
+                'sudo', 'nmcli', 'connection', 'modify', 'Wired connection 1',
+                'connection.autoconnect', 'yes'
+            ], check=True, capture_output=True)
+
+            # Restart the connection
+            subprocess.run([
+                'sudo', 'nmcli', 'connection', 'down', 'Wired connection 1'
+            ], capture_output=True)  # Don't check - might already be down
+
+            subprocess.run([
+                'sudo', 'nmcli', 'connection', 'up', 'Wired connection 1'
+            ], check=True, capture_output=True)
+
+            return True
+
+        except subprocess.CalledProcessError:
+            return False
 
     def log(self, message: str):
         """Add message to status log."""
