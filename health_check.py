@@ -106,7 +106,7 @@ class HealthChecker:
         Returns:
             Tuple of (status, details)
         """
-        atem_ip = "192.168.100.2"
+        atem_ip = self.config_manager.get_atem_ip()
         
         try:
             result = subprocess.run(
