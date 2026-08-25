@@ -53,23 +53,19 @@ else
     log_message "No internet detected, reconnecting WiFi..."
     
     # Get the WiFi interface name (usually wlan0)
-    WIFI_INTERFACE=$(ip link show | grep -o "wlan[0-9]" | head -n 1)
+    ACTIVE_INTERFACE=$(ip route show default | awk '/default/ {print $5}' | head -n 1)
     
-    if [ -z "$WIFI_INTERFACE" ]; then
-        log_message "ERROR: Could not find WiFi interface"
-        exit 1
+    if [ -z "$ACTIVE_INTERFACE" ]; then
+        log_message "WARNING: Could not find default interface. Restarting NetworkManager anyway."
+        sudo systemctl restart NetworkManager
+    else
+        log_message "Restarting active interface: $ACTIVE_INTERFACE"
+        sudo ip link set "$ACTIVE_INTERFACE" down
+        sleep 2
+        sudo ip link set "$ACTIVE_INTERFACE" up
+        sleep 5
+        sudo systemctl restart NetworkManager
     fi
-    
-    log_message "WiFi interface: $WIFI_INTERFACE"
-    
-    # Restart the WiFi interface
-    sudo ip link set "$WIFI_INTERFACE" down
-    sleep 2
-    sudo ip link set "$WIFI_INTERFACE" up
-    sleep 5
-    
-    # Restart NetworkManager to force reconnection
-    sudo systemctl restart NetworkManager
     sleep 10
     
     # Check if internet is back
