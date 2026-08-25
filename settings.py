@@ -140,6 +140,20 @@ class SettingsScreen(QWidget):
         audio_row.addWidget(self.audio_device_combo)
         layout.addLayout(audio_row)
 
+        # ATEM IP - inline label
+        atem_row = QHBoxLayout()
+        atem_row.setSpacing(3)
+        atem_label = QLabel("ATEM IP:")
+        atem_label.setStyleSheet("font-size: 11px;")
+        atem_label.setFixedWidth(55)
+        atem_row.addWidget(atem_label)
+        self.atem_ip_input = QLineEdit()
+        self.atem_ip_input.setMinimumHeight(38)
+        self.atem_ip_input.setStyleSheet("font-size: 10px; padding: 4px;")
+        self.atem_ip_input.setPlaceholderText("192.168.1.x")
+        atem_row.addWidget(self.atem_ip_input)
+        layout.addLayout(atem_row)
+
         # Buttons - taller, stacked vertically
         detect_btn = QPushButton("🔍 Detect")
         detect_btn.setMinimumHeight(40)
@@ -611,6 +625,7 @@ class SettingsScreen(QWidget):
         """Load current settings from config."""
         # Device settings
         self.load_devices()
+        self.atem_ip_input.setText(self.config.get_atem_ip())
 
         # Drive settings
         drive_config = self.config.get_drive_config()
@@ -890,8 +905,14 @@ class SettingsScreen(QWidget):
 
         video_device = self.video_device_combo.currentData()
         audio_device = self.audio_device_combo.currentData()
+        atem_ip = self.atem_ip_input.text().strip()
+
+        if not atem_ip:
+            QMessageBox.warning(self, "Error", "Please enter an ATEM IP address")
+            return
 
         self.config.set_devices(video_device, audio_device)
+        self.config.set_atem_ip(atem_ip)
         QMessageBox.information(
             self,
             "Success",

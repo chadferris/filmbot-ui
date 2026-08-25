@@ -28,6 +28,7 @@ class ConfigManager:
             "video_device": "/dev/video5",
             "audio_device": "hw:2,0"
         },
+        "atem_ip": "192.168.100.2",
         "schedules": [],
         "device_name": "Filmbot",
         "ui": {
@@ -220,6 +221,15 @@ class ConfigManager:
         """Get audio device identifier."""
         devices = self.get_devices()
         return devices.get("audio_device", "hw:2,0")
+
+    def get_atem_ip(self) -> str:
+        """Get ATEM Mini IP address."""
+        return self._config.get("atem_ip", self.DEFAULT_CONFIG["atem_ip"])
+
+    def set_atem_ip(self, ip: str):
+        """Set ATEM Mini IP address."""
+        self._config["atem_ip"] = ip
+        self.save()
 
     def get_hide_taskbar(self) -> bool:
         """Get hide taskbar setting."""
