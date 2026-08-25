@@ -28,9 +28,6 @@ class ConfigManager:
             "video_device": "/dev/video5",
             "audio_device": "hw:2,0"
         },
-        "network": {
-            "atem_ip": "192.168.100.2"
-        },
         "schedules": [],
         "device_name": "Filmbot",
         "ui": {
@@ -223,22 +220,6 @@ class ConfigManager:
         """Get audio device identifier."""
         devices = self.get_devices()
         return devices.get("audio_device", "hw:2,0")
-
-    def get_network_config(self) -> Dict[str, str]:
-        """Get network configuration."""
-        return self._config.get("network", self.DEFAULT_CONFIG["network"])
-
-    def get_atem_ip(self) -> str:
-        """Get ATEM Mini IP address."""
-        network = self.get_network_config()
-        return network.get("atem_ip", "192.168.100.2")
-
-    def set_atem_ip(self, atem_ip: str):
-        """Set ATEM Mini IP address."""
-        if "network" not in self._config:
-            self._config["network"] = {}
-        self._config["network"]["atem_ip"] = atem_ip
-        self.save()
 
     def get_hide_taskbar(self) -> bool:
         """Get hide taskbar setting."""
