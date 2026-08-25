@@ -101,34 +101,48 @@ class HealthChecker:
         return 'ok', {'Video Device': f'{video_device} ✅'}
     
     def check_atem_connection(self) -> Tuple[str, Dict]:
-        """Check ATEM connection via ping.
-        
+        """Check ATEM connection via ping with retries.
+
         Returns:
             Tuple of (status, details)
         """
-        atem_ip = "192.168.100.2"
-        
-        try:
-            result = subprocess.run(
-                ['ping', '-c', '1', '-W', '2', atem_ip],
-                capture_output=True,
-                timeout=3
-            )
-            
-            if result.returncode == 0:
-                return 'ok', {'ATEM': 'Connected ✅'}
-            else:
-                return 'warning', {
-                    'Issue': 'ATEM not responding',
-                    'IP': atem_ip,
-                    'Action': 'Check ATEM power and ethernet connection'
-                }
-                
-        except Exception as e:
-            return 'warning', {
-                'Issue': 'Failed to check ATEM',
-                'Error': str(e)
-            }
+        atem_ip = self.config_manager.get_atem_ip()
+        max_retries = 3
+        retry_delay = 2  # seconds
+
+        for attempt in range(max_retries):
+            try:
+                result = subprocess.run(
+                    ['ping', '-c', '1', '-W', '3', atem_ip],
+                    capture_output=True,
+                    timeout=4
+                )
+
+                if result.returncode == 0:
+                    return 'ok', {'ATEM': 'Connected ✅'}
+
+                # If not last attempt, wait before retry
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(retry_delay)
+
+            except Exception as e:
+                # If not last attempt, wait before retry
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(retry_delay)
+                else:
+                    return 'warning', {
+                        'Issue': 'Failed to check ATEM',
+                        'Error': str(e)
+                    }
+
+        # All retries failed
+        return 'warning', {
+            'Issue': 'ATEM not responding after 3 attempts',
+            'IP': atem_ip,
+            'Action': 'Check ATEM power and ethernet connection'
+        }
     
     def check_network(self) -> Tuple[str, Dict]:
         """Check network connectivity with retry logic.
