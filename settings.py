@@ -322,28 +322,6 @@ class SettingsScreen(QWidget):
         name_row.addWidget(save_name_btn)
         layout.addLayout(name_row)
 
-        # ATEM IP - inline
-        atem_row = QHBoxLayout()
-        atem_row.setSpacing(3)
-        atem_label = QLabel("ATEM:")
-        atem_label.setStyleSheet("font-size: 11px;")
-        atem_label.setFixedWidth(45)
-        atem_row.addWidget(atem_label)
-
-        self.atem_ip_input = QLineEdit()
-        self.atem_ip_input.setMinimumHeight(38)
-        self.atem_ip_input.setStyleSheet("font-size: 10px;")
-        self.atem_ip_input.setPlaceholderText("192.168.1.x")
-        atem_row.addWidget(self.atem_ip_input)
-
-        save_atem_btn = QPushButton("💾")
-        save_atem_btn.setMinimumHeight(38)
-        save_atem_btn.setFixedWidth(45)
-        save_atem_btn.setStyleSheet("font-size: 14px;")
-        save_atem_btn.clicked.connect(self.save_atem_ip)
-        atem_row.addWidget(save_atem_btn)
-        layout.addLayout(atem_row)
-
         # Info labels - hostname and IP on same line
         info_row = QHBoxLayout()
         self.hostname_label = QLabel("Host: --")
@@ -644,7 +622,6 @@ class SettingsScreen(QWidget):
 
         # System info
         self.device_name_input.setText(self.config.get_device_name())
-        self.atem_ip_input.setText(self.config.get_atem_ip())
         self.hostname_label.setText(f"Hostname: {socket.gethostname()}")
 
         # Get IP address
@@ -845,23 +822,6 @@ class SettingsScreen(QWidget):
             QMessageBox.information(self, "Success", "Device name saved!")
         else:
             QMessageBox.warning(self, "Error", "Please enter a device name")
-
-    def save_atem_ip(self):
-        """Save ATEM Mini IP address."""
-        atem_ip = self.atem_ip_input.text().strip()
-        if not atem_ip:
-            QMessageBox.warning(self, "Error", "Please enter an ATEM IP address")
-            return
-
-        # Basic IPv4 validation
-        parts = atem_ip.split(".")
-        valid = len(parts) == 4 and all(p.isdigit() and 0 <= int(p) <= 255 for p in parts)
-        if not valid:
-            QMessageBox.warning(self, "Error", f"Invalid IP address: {atem_ip}")
-            return
-
-        self.config.set_atem_ip(atem_ip)
-        QMessageBox.information(self, "Success", "ATEM IP saved!")
 
     def save_ui_settings(self):
         """Save UI settings."""
