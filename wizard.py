@@ -731,36 +731,6 @@ class FinishPage(WizardPage):
         summary.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(summary)
 
-        # ATEM network configuration (optional)
-        self.atem_network_checkbox = QCheckBox("Configure dedicated ATEM network (eth0 static IP)")
-        self.atem_network_checkbox.setStyleSheet("font-size: 14px; font-weight: bold;")
-        self.atem_network_checkbox.setChecked(False)
-        self.atem_network_checkbox.toggled.connect(self._toggle_atem_network_fields)
-        self.layout.addWidget(self.atem_network_checkbox)
-
-        atem_help = QLabel(
-            "Only enable this if the Pi is directly connected to the ATEM Mini on an\n"
-            "isolated 192.168.100.0/24 network. Leave unchecked if the ATEM is on your\n"
-            "regular LAN (e.g. 192.168.1.x)."
-        )
-        atem_help.setStyleSheet("font-size: 11px; color: #666; padding: 0 0 5px 0;")
-        atem_help.setWordWrap(True)
-        self.layout.addWidget(atem_help)
-
-        eth0_ip_label = QLabel("Pi eth0 static IP:")
-        eth0_ip_label.setStyleSheet("font-size: 13px;")
-        self.layout.addWidget(eth0_ip_label)
-
-        self.eth0_ip_input = QLineEdit()
-        self.eth0_ip_input.setPlaceholderText("192.168.100.3")
-        self.eth0_ip_input.setText("192.168.100.3")
-        self.eth0_ip_input.setMinimumHeight(40)
-        self.eth0_ip_input.setStyleSheet("font-size: 14px; padding: 5px;")
-        self.layout.addWidget(self.eth0_ip_input)
-
-        # Initially disabled to match unchecked default
-        self._toggle_atem_network_fields(False)
-
         # Status text
         self.status_text = QTextEdit()
         self.status_text.setReadOnly(True)
@@ -771,10 +741,6 @@ class FinishPage(WizardPage):
         self.layout.addStretch()
         self.add_navigation_buttons(show_back=True, next_text="Finish")
 
-    def _toggle_atem_network_fields(self, enabled: bool):
-        """Enable/disable ATEM network input fields based on checkbox."""
-        self.eth0_ip_input.setEnabled(enabled)
-
     def apply_configuration(self) -> bool:
         """Apply configuration and create systemd services.
 
@@ -784,16 +750,12 @@ class FinishPage(WizardPage):
         self.status_text.clear()
         self.log("Applying configuration...")
 
-        # Configure ATEM network interface (eth0) - opt-in
-        if self.atem_network_checkbox.isChecked():
-            eth0_ip = self.eth0_ip_input.text().strip() or "192.168.100.3"
-            self.log(f"\nConfiguring ATEM network interface (eth0: {eth0_ip})...")
-            if self.configure_atem_network(eth0_ip):
-                self.log(f"✓ ATEM network configured (eth0: {eth0_ip})")
-            else:
-                self.log("⚠ ATEM network configuration failed (you may need to run setup-atem-network.sh manually)")
+        # Configure ATEM network interface (eth0)
+        self.log("\nConfiguring ATEM network interface...")
+        if self.configure_atem_network():
+            self.log("✓ ATEM network configured (eth0: 192.168.100.3)")
         else:
-            self.log("\nSkipping dedicated ATEM network configuration (eth0 left unchanged).")
+            self.log("⚠ ATEM network configuration failed (you may need to run setup-atem-network.sh manually)")
 
         # Update sync script with new Drive path
         drive_config = self.config.get_drive_config()
@@ -816,11 +778,8 @@ class FinishPage(WizardPage):
 
         return True
 
-    def configure_atem_network(self, eth0_ip: str = "192.168.100.3") -> bool:
+    def configure_atem_network(self) -> bool:
         """Configure eth0 with static IP for ATEM communication.
-
-        Args:
-            eth0_ip: Static IPv4 address to assign to eth0 (without prefix).
 
         Returns:
             True if successful, False otherwise
@@ -832,7 +791,7 @@ class FinishPage(WizardPage):
             # Set IP address FIRST, then method (nmcli requirement)
             subprocess.run([
                 'sudo', 'nmcli', 'connection', 'modify', 'Wired connection 1',
-                'ipv4.addresses', f'{eth0_ip}/24'
+                'ipv4.addresses', '192.168.100.3/24'
             ], check=True, capture_output=True)
 
             subprocess.run([
