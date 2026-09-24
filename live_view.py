@@ -4,6 +4,7 @@ Main screen showing video preview and status information.
 """
 
 import os
+import signal
 import subprocess
 import struct
 from datetime import datetime, timedelta
@@ -430,11 +431,63 @@ class LiveView(QWidget):
         print("Manual recording started (1 hour duration)")
 
     def stop_manual_recording(self):
-        """Stop the manual recording by gracefully stopping ffmpeg."""
-        # Send SIGINT (Ctrl+C) to ffmpeg so it can finalize the file properly
-        # This is the same as pressing 'q' - ffmpeg will finish writing headers
-        subprocess.run(['pkill', '-SIGINT', 'ffmpeg'], check=False)
-        print("Sent graceful stop signal to recording (ffmpeg will finalize file)")
+        """Stop the manual recording by gracefully stopping ffmpeg.
+
+        Sends SIGINT (Ctrl+C) to the exact recording ffmpeg process (read from
+        the PID file written by record-atem.sh) so it can finalize the MP4 -
+        write the moov atom - before exiting. A forced kill (SIGKILL) can
+        leave the file unplayable, so escalation only happens as a last
+        resort if ffmpeg fails to exit on its own after a grace period.
+        """
+        pid = self._read_recording_pid()
+
+        if pid is None:
+            # No PID file found - fall back to the old blanket approach.
+            subprocess.run(['pkill', '-SIGINT', 'ffmpeg'], check=False)
+            print("Sent graceful stop signal to recording (ffmpeg will finalize file)")
+            return
+
+        try:
+            os.kill(pid, signal.SIGINT)
+            print(f"Sent SIGINT to ffmpeg (pid {pid}) - waiting for it to finalize the file")
+        except ProcessLookupError:
+            print("ffmpeg process already exited")
+            return
+
+        # Safety net: if ffmpeg hasn't exited on its own after a grace
+        # period, escalate one signal level at a time. This is non-blocking
+        # so it doesn't freeze the UI while ffmpeg finalizes the file.
+        QTimer.singleShot(15000, lambda: self._escalate_stop_if_still_running(pid, signal.SIGTERM, "SIGTERM"))
+
+    def _read_recording_pid(self):
+        """Read the ffmpeg PID written by record-atem.sh, if present."""
+        pid_file = Path("/tmp/filmbot-recording.pid")
+        try:
+            return int(pid_file.read_text().strip())
+        except (FileNotFoundError, ValueError):
+            return None
+
+    def _escalate_stop_if_still_running(self, pid, sig, sig_name):
+        """Escalate the stop signal only if ffmpeg is still running.
+
+        SIGTERM is tried before SIGKILL. SIGKILL is a last resort since it
+        can leave the recorded MP4 without a valid moov atom.
+        """
+        try:
+            os.kill(pid, 0)  # Check the process is still alive; raises if not.
+        except ProcessLookupError:
+            return  # Already exited cleanly, nothing to do.
+
+        print(f"ffmpeg (pid {pid}) still running after grace period - sending {sig_name}")
+        try:
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            return
+
+        if sig == signal.SIGTERM:
+            QTimer.singleShot(15000, lambda: self._escalate_stop_if_still_running(pid, signal.SIGKILL, "SIGKILL"))
+        elif sig == signal.SIGKILL:
+            print(f"WARNING: ffmpeg (pid {pid}) had to be force-killed - the recording may be corrupted")
 
     def closeEvent(self, event):
         """Handle widget close event."""

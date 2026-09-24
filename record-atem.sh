@@ -37,10 +37,16 @@ SIGNAL_FILE="/tmp/filmbot-recording"
 echo "$(date): Creating signal file for UI..." >> "$LOG_FILE"
 echo "$OUTPUT_FILE" > "$SIGNAL_FILE"
 
+# PID file so the UI can send stop signals to this exact ffmpeg process
+# instead of matching every process named "ffmpeg" on the system.
+PID_FILE="/tmp/filmbot-recording.pid"
+
 # Wait 3 seconds for UI to release the video device
 sleep 3
 
-# Record using ffmpeg
+# Record using ffmpeg. Run in the background so we can capture its PID for
+# the PID file, then `wait` on it so this script still blocks until ffmpeg
+# has fully exited (and finished writing the moov atom) before continuing.
 ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 60 -i "$VIDEO_DEVICE" \
        -f alsa -ac 2 -ar 48000 -i "$AUDIO_DEVICE" \
        -t "$DURATION" \
@@ -48,27 +54,45 @@ ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 60 -i "$VIDE
        -c:a aac -b:a 192k \
        -movflags +faststart \
        "$OUTPUT_FILE" \
-       >> "$LOG_FILE" 2>&1
+       >> "$LOG_FILE" 2>&1 &
+FFMPEG_PID=$!
+echo "$FFMPEG_PID" > "$PID_FILE"
 
-# Capture ffmpeg exit code
+wait "$FFMPEG_PID"
 FFMPEG_EXIT=$?
 
-# ALWAYS remove signal file to tell UI recording is done
+# ALWAYS remove signal/pid files to tell UI recording is done
 echo "$(date): Removing signal file..." >> "$LOG_FILE"
-rm -f "$SIGNAL_FILE"
+rm -f "$SIGNAL_FILE" "$PID_FILE"
 
 # Check if recording was successful
 if [ $FFMPEG_EXIT -eq 0 ]; then
     FILE_SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
     echo "$(date): Recording completed successfully - Size: $FILE_SIZE" >> "$LOG_FILE"
 
-    # Trigger sync (if sync script exists)
-    if [ -f "/opt/filmbot-appliance/sync-drive.sh" ]; then
-        echo "$(date): Triggering Google Drive sync..." >> "$LOG_FILE"
-        /opt/filmbot-appliance/sync-drive.sh >> "$LOG_FILE" 2>&1 &
+    # Validate the file is actually playable (has a moov atom / readable
+    # stream info) before handing it off to sync-drive.sh. sync-drive.sh
+    # uses `rclone move`, which deletes the local file after upload, so we
+    # must not let a corrupt/truncated file get uploaded-then-deleted.
+    if ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$OUTPUT_FILE" >> "$LOG_FILE" 2>&1; then
+        echo "$(date): File validation passed - $OUTPUT_FILE is playable" >> "$LOG_FILE"
+
+        # Trigger sync (if sync script exists)
+        if [ -f "/opt/filmbot-appliance/sync-drive.sh" ]; then
+            echo "$(date): Triggering Google Drive sync..." >> "$LOG_FILE"
+            /opt/filmbot-appliance/sync-drive.sh >> "$LOG_FILE" 2>&1 &
+        fi
+    else
+        FAILED_DIR="$RECORDINGS_DIR/failed"
+        mkdir -p "$FAILED_DIR"
+        mv "$OUTPUT_FILE" "$FAILED_DIR/"
+        echo "$(date): WARNING - File validation FAILED. $OUTPUT_FILE appears corrupt (missing/invalid moov atom)." >> "$LOG_FILE"
+        echo "$(date): Moved to $FAILED_DIR for inspection instead of syncing to Drive." >> "$LOG_FILE"
+        exit 1
     fi
 else
     echo "$(date): Recording failed with error code $FFMPEG_EXIT" >> "$LOG_FILE"
+    rm -f "$PID_FILE"
     exit 1
 fi
 
