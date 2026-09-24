@@ -46,13 +46,23 @@ sleep 3
 
 # Record using ffmpeg. Run in the background so we can capture its PID for
 # the PID file, then `wait` on it so this script still blocks until ffmpeg
-# has fully exited (and finished writing the moov atom) before continuing.
+# has fully exited before continuing.
+#
+# Container is fragmented MP4 (+frag_keyframe+empty_moov+default_base_moof
+# with -frag_duration 1s and -flush_packets 1): the moov atom is written up
+# front and each fragment is self-contained + flushed to disk, so the file
+# is playable up to the last complete fragment even if ffmpeg is truncated
+# or hard-killed. This avoids the +faststart post-encoding relocation pass
+# that could be interrupted by the UI's stop-signal escalation and leave
+# the file without a valid moov atom.
 ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 60 -i "$VIDEO_DEVICE" \
        -f alsa -ac 2 -ar 48000 -i "$AUDIO_DEVICE" \
        -t "$DURATION" \
        -c:v libx264 -preset ultrafast -crf 23 \
        -c:a aac -b:a 192k \
-       -movflags +faststart \
+       -movflags +frag_keyframe+empty_moov+default_base_moof \
+       -frag_duration 1000000 \
+       -flush_packets 1 \
        "$OUTPUT_FILE" \
        >> "$LOG_FILE" 2>&1 &
 FFMPEG_PID=$!
@@ -65,10 +75,13 @@ FFMPEG_EXIT=$?
 echo "$(date): Removing signal file..." >> "$LOG_FILE"
 rm -f "$SIGNAL_FILE" "$PID_FILE"
 
-# Check if recording was successful
-if [ $FFMPEG_EXIT -eq 0 ]; then
+# Check ffmpeg exit code. 0 = natural completion (hit -t DURATION or EOF).
+# 255 = ffmpeg's normal exit code when it receives SIGINT (the UI's stop
+# button); the file is still finalized in that case. Any other non-zero
+# code (missing device, disk full, etc.) is treated as a hard failure.
+if [ $FFMPEG_EXIT -eq 0 ] || [ $FFMPEG_EXIT -eq 255 ]; then
     FILE_SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
-    echo "$(date): Recording completed successfully - Size: $FILE_SIZE" >> "$LOG_FILE"
+    echo "$(date): Recording completed (ffmpeg exit=$FFMPEG_EXIT) - Size: $FILE_SIZE" >> "$LOG_FILE"
 
     # Validate the file is actually playable (has a moov atom / readable
     # stream info) before handing it off to sync-drive.sh. sync-drive.sh
