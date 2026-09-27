@@ -42,6 +42,12 @@ class ConfigManager:
             "daily_report_time": "08:00",
             "quiet_hours_start": "22:00",
             "quiet_hours_end": "07:00"
+        },
+        "propresenter": {
+            "version": "disabled",
+            "ip": "",
+            "port": 50001,
+            "password": ""
         }
     }
     
@@ -276,4 +282,30 @@ class ConfigManager:
             self._config["ui"] = {}
         self._config["ui"]["hide_taskbar"] = hide
         self.save()
+
+    def get_propresenter_config(self) -> Dict[str, Any]:
+        """Get ProPresenter integration configuration."""
+        return self._config.get("propresenter", self.DEFAULT_CONFIG["propresenter"])
+
+    def set_propresenter_config(self, version: str, ip: str, port: int, password: str):
+        """Set ProPresenter integration configuration.
+
+        Args:
+            version: ProPresenter version ("disabled", "6", or "7")
+            ip: Host/IP address of the ProPresenter machine
+            port: Network port
+            password: Remote/stage password (empty string if none)
+        """
+        self._config["propresenter"] = {
+            "version": version,
+            "ip": ip,
+            "port": int(port),
+            "password": password
+        }
+        self.save()
+
+    def is_propresenter_enabled(self) -> bool:
+        """Check if ProPresenter integration is enabled."""
+        pp = self.get_propresenter_config()
+        return pp.get("version", "disabled") in ("6", "7")
 

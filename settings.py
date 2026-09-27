@@ -23,24 +23,24 @@ from device_detector import detect_video_devices, detect_audio_devices
 
 class SettingsScreen(QWidget):
     """Settings and configuration screen."""
-    
+
     back_requested = Signal()
-    
+
     def __init__(self, config: ConfigManager, parent=None):
         """Initialize settings screen.
-        
+
         Args:
             config: Configuration manager instance
             parent: Parent widget
         """
         super().__init__(parent)
-        
+
         self.config = config
         self.systemd_mgr = SystemdManager(dry_run=False)
-        
+
         self.setup_ui()
         self.load_settings()
-    
+
     def setup_ui(self):
         """Setup the UI layout."""
         main_layout = QVBoxLayout(self)
@@ -252,7 +252,7 @@ class SettingsScreen(QWidget):
         layout.addWidget(save_btn)
 
         return group
-    
+
     def create_schedules_section(self) -> QGroupBox:
         """Create recording schedules section."""
         group = QGroupBox("Schedules")
@@ -401,6 +401,17 @@ class SettingsScreen(QWidget):
         email_btn.setStyleSheet("font-size: 12px; font-weight: bold;")
         email_btn.clicked.connect(self.open_email_alerts_dialog)
         layout.addWidget(email_btn)
+
+        pp_desc = QLabel("Trigger recordings from ProPresenter slide notes ([START_RECORD]/[STOP_RECORD]).")
+        pp_desc.setStyleSheet("font-size: 11px; color: #666;")
+        pp_desc.setWordWrap(True)
+        layout.addWidget(pp_desc)
+
+        pp_btn = QPushButton("🎬 ProPresenter")
+        pp_btn.setMinimumHeight(44)
+        pp_btn.setStyleSheet("font-size: 12px; font-weight: bold;")
+        pp_btn.clicked.connect(self.open_propresenter_dialog)
+        layout.addWidget(pp_btn)
 
         return group
 
@@ -649,6 +660,193 @@ class SettingsScreen(QWidget):
             dialog.move(x, y)
 
         dialog.exec()
+
+    def open_propresenter_dialog(self):
+        """Open ProPresenter configuration dialog."""
+        from PySide6.QtWidgets import (
+            QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+            QPushButton, QGridLayout, QComboBox, QSpinBox
+        )
+        from PySide6.QtCore import Qt
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("ProPresenter Settings")
+        dialog.setMinimumWidth(700)
+        dialog.setMaximumHeight(350)
+        dialog.setFixedHeight(350)
+        dialog.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+
+        layout = QVBoxLayout(dialog)
+        layout.setSpacing(3)
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        # Title bar
+        title_bar = QHBoxLayout()
+        title_label = QLabel("🎬 ProPresenter Settings")
+        title_label.setStyleSheet("font-size: 13px; font-weight: bold; padding: 3px;")
+        title_bar.addWidget(title_label)
+
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(28, 28)
+        close_btn.setStyleSheet("font-size: 14px; background: #f44336; color: white; border-radius: 4px;")
+        close_btn.clicked.connect(dialog.reject)
+        title_bar.addWidget(close_btn)
+        layout.addLayout(title_bar)
+
+        # Grid form
+        grid = QGridLayout()
+        grid.setSpacing(3)
+        grid.setContentsMargins(0, 3, 0, 3)
+
+        # Version
+        version_label = QLabel("Version:")
+        version_label.setStyleSheet("font-size: 11px;")
+        version_label.setFixedWidth(80)
+        grid.addWidget(version_label, 0, 0)
+
+        version_combo = QComboBox()
+        version_combo.addItem("Disabled", "disabled")
+        version_combo.addItem("ProPresenter 6", "6")
+        version_combo.addItem("ProPresenter 7", "7")
+        version_combo.setMinimumHeight(34)
+        version_combo.setStyleSheet("font-size: 11px;")
+        grid.addWidget(version_combo, 0, 1)
+
+        # IP
+        ip_label = QLabel("IP Address:")
+        ip_label.setStyleSheet("font-size: 11px;")
+        ip_label.setFixedWidth(80)
+        grid.addWidget(ip_label, 1, 0)
+
+        ip_input = QLineEdit()
+        ip_input.setPlaceholderText("192.168.1.50")
+        ip_input.setMinimumHeight(34)
+        ip_input.setStyleSheet("font-size: 10px; padding: 2px;")
+        grid.addWidget(ip_input, 1, 1)
+
+        # Port
+        port_label = QLabel("Port:")
+        port_label.setStyleSheet("font-size: 11px;")
+        port_label.setFixedWidth(80)
+        grid.addWidget(port_label, 2, 0)
+
+        port_spin = QSpinBox()
+        port_spin.setRange(1, 65535)
+        port_spin.setValue(50001)
+        port_spin.setMinimumHeight(34)
+        port_spin.setStyleSheet("font-size: 11px;")
+        grid.addWidget(port_spin, 2, 1)
+
+        # Password
+        pass_label = QLabel("Password:")
+        pass_label.setStyleSheet("font-size: 11px;")
+        pass_label.setFixedWidth(80)
+        grid.addWidget(pass_label, 3, 0)
+
+        pass_input = QLineEdit()
+        pass_input.setPlaceholderText("Remote/Stage password")
+        pass_input.setEchoMode(QLineEdit.Password)
+        pass_input.setMinimumHeight(34)
+        pass_input.setStyleSheet("font-size: 10px; padding: 2px;")
+        grid.addWidget(pass_input, 3, 1)
+
+        layout.addLayout(grid)
+
+        # Load current values
+        pp_config = self.config.get_propresenter_config()
+        current_version = pp_config.get("version", "disabled")
+        idx = version_combo.findData(current_version)
+        if idx >= 0:
+            version_combo.setCurrentIndex(idx)
+        ip_input.setText(pp_config.get("ip", ""))
+        try:
+            port_spin.setValue(int(pp_config.get("port", 50001)))
+        except (TypeError, ValueError):
+            port_spin.setValue(50001)
+        pass_input.setText(pp_config.get("password", ""))
+
+        # Enable/disable inputs based on version selection
+        def toggle_fields():
+            enabled = version_combo.currentData() != "disabled"
+            ip_input.setEnabled(enabled)
+            port_spin.setEnabled(enabled)
+            pass_input.setEnabled(enabled)
+
+        version_combo.currentIndexChanged.connect(toggle_fields)
+        toggle_fields()
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(4)
+
+        save_btn = QPushButton("💾 Save")
+        save_btn.setMinimumHeight(36)
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+            QPushButton:pressed {
+                background-color: #45a049;
+            }
+        """)
+
+        def save_settings():
+            version = version_combo.currentData()
+            ip = ip_input.text().strip()
+            port = port_spin.value()
+            password = pass_input.text()
+
+            if version != "disabled" and not ip:
+                QMessageBox.warning(dialog, "Error", "Please enter an IP address")
+                return
+
+            self.config.set_propresenter_config(
+                version=version,
+                ip=ip,
+                port=port,
+                password=password
+            )
+            QMessageBox.information(dialog, "Success", "ProPresenter settings saved!")
+            dialog.accept()
+
+        save_btn.clicked.connect(save_settings)
+        btn_layout.addWidget(save_btn)
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setMinimumHeight(36)
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #757575;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+            QPushButton:pressed {
+                background-color: #616161;
+            }
+        """)
+        cancel_btn.clicked.connect(dialog.reject)
+        btn_layout.addWidget(cancel_btn)
+
+        layout.addLayout(btn_layout)
+
+        dialog.show()
+        screen = dialog.screen()
+        if screen:
+            screen_geometry = screen.geometry()
+            x = (screen_geometry.width() - dialog.width()) // 2
+            y = 20
+            dialog.move(x, y)
+
+        dialog.exec()
+
 
     def load_settings(self):
         """Load current settings from config."""
