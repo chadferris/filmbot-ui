@@ -156,8 +156,9 @@ class PP6Listener:
             uid = None
             notes = ""
             for el in data.get("ary") or []:
-                if el.get("acn") == "csn":
+                if el.get("acn") == "cs":
                     uid = el.get("uid") or uid
+                elif el.get("acn") == "csn":
                     notes = el.get("txt") or ""
             if uid is not None:
                 self.dispatcher.handle(f"pp6:{uid}", notes)
