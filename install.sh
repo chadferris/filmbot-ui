@@ -72,14 +72,14 @@ fi
 
 # Create application directory
 echo "Creating application directory..."
-sudo mkdir -p /opt/filmbot-appliance/ui
+sudo mkdir -p /opt/filmbot-appliance/ui/ui
 sudo chown -R $USER:$USER /opt/filmbot-appliance/ui
 
 # Copy files
 echo "Copying application files..."
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cp "$SCRIPT_DIR"/*.py /opt/filmbot-appliance/ui/
-cp "$SCRIPT_DIR"/ui/*.py /opt/filmbot-appliance/ui/
+cp "$SCRIPT_DIR"/ui/*.py /opt/filmbot-appliance/ui/ui/
 cp "$SCRIPT_DIR"/requirements.txt /opt/filmbot-appliance/ui/
 
 # Copy recording and sync scripts
