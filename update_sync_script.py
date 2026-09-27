@@ -17,9 +17,17 @@ SYNC_SCRIPT_TEMPLATE = """#!/bin/bash
 RECORDINGS_DIR="/mnt/nvme/recordings"
 DRIVE_DEST="{drive_destination}"
 LOG_FILE="/var/log/filmbot-rclone.log"
+LOCK_FILE="/var/lock/filmbot-sync.lock"
 
 # Ensure log file exists
 touch "$LOG_FILE"
+
+# Acquire exclusive lock to prevent concurrent rclone execution
+exec 200>"$LOCK_FILE"
+if ! flock -n 200; then
+    echo "$(date): Another sync is already running, exiting" >> "$LOG_FILE"
+    exit 0
+fi
 
 # Sync recordings to Google Drive
 echo "$(date): Starting sync to $DRIVE_DEST" >> "$LOG_FILE"
