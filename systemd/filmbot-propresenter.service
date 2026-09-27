@@ -1,0 +1,19 @@
+[Unit]
+Description=Filmbot ProPresenter Slide-Tag Listener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=filmbot
+Group=filmbot
+WorkingDirectory=/opt/filmbot-appliance/ui
+ExecStart=/opt/filmbot-appliance/ui/venv/bin/python /opt/filmbot-appliance/ui/propresenter_listener.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

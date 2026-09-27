@@ -811,6 +811,7 @@ class SettingsScreen(QWidget):
                 port=port,
                 password=password
             )
+            self.systemd_mgr.restart_propresenter_service()
             QMessageBox.information(dialog, "Success", "ProPresenter settings saved!")
             dialog.accept()
 

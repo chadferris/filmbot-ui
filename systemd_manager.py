@@ -38,6 +38,8 @@ WantedBy=timers.target
 """
     
     SYSTEMD_PATH = Path("/etc/systemd/system")
+
+    PROPRESENTER_SERVICE = "filmbot-propresenter.service"
     
     def __init__(self, dry_run: bool = False):
         """Initialize systemd manager.
@@ -200,4 +202,14 @@ WantedBy=timers.target
 
         # Reload systemd
         return self._run_command(['sudo', 'systemctl', 'daemon-reload'])
+
+    def restart_propresenter_service(self) -> bool:
+        """Restart the ProPresenter listener service to pick up config changes.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        return self._run_command(
+            ['sudo', 'systemctl', 'restart', self.PROPRESENTER_SERVICE]
+        )
 

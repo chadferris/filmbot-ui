@@ -79,6 +79,7 @@ sudo chown -R $USER:$USER /opt/filmbot-appliance/ui
 echo "Copying application files..."
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cp "$SCRIPT_DIR"/*.py /opt/filmbot-appliance/ui/
+cp "$SCRIPT_DIR"/ui/*.py /opt/filmbot-appliance/ui/
 cp "$SCRIPT_DIR"/requirements.txt /opt/filmbot-appliance/ui/
 
 # Copy recording and sync scripts
@@ -104,6 +105,7 @@ chmod +x /opt/filmbot-appliance/ui/main.py
 # Install systemd service
 echo "Installing systemd service..."
 sudo cp "$SCRIPT_DIR"/filmbot-ui.service /etc/systemd/system/
+sudo cp "$SCRIPT_DIR"/systemd/filmbot-propresenter.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
 # Configure sudoers
@@ -115,6 +117,10 @@ filmbot ALL=(ALL) NOPASSWD: /bin/systemctl disable filmbot-record-*.timer
 filmbot ALL=(ALL) NOPASSWD: /bin/systemctl start filmbot-record-*.timer
 filmbot ALL=(ALL) NOPASSWD: /bin/systemctl stop filmbot-record-*.timer
 filmbot ALL=(ALL) NOPASSWD: /bin/systemctl is-active filmbot-record-*.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl restart filmbot-propresenter.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl start filmbot-propresenter.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl stop filmbot-propresenter.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl is-active filmbot-propresenter.service
 EOF
 
 sudo chmod 0440 /etc/sudoers.d/filmbot
@@ -122,6 +128,11 @@ sudo chmod 0440 /etc/sudoers.d/filmbot
 # Enable service
 echo "Enabling filmbot-ui service..."
 sudo systemctl enable filmbot-ui.service
+
+# Enable and start ProPresenter listener service
+echo "Enabling filmbot-propresenter service..."
+sudo systemctl enable filmbot-propresenter.service
+sudo systemctl start filmbot-propresenter.service || true
 
 # Configure auto-login
 echo ""
