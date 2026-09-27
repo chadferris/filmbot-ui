@@ -11,7 +11,8 @@ from PySide6.QtCore import Qt, Signal, QTime, QTimer
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
-    QComboBox, QSpinBox, QTimeEdit, QGroupBox, QScrollArea, QCheckBox
+    QComboBox, QSpinBox, QTimeEdit, QGroupBox, QScrollArea, QCheckBox,
+    QTabWidget
 )
 from PySide6.QtGui import QFont
 
@@ -42,7 +43,6 @@ class SettingsScreen(QWidget):
     
     def setup_ui(self):
         """Setup the UI layout."""
-        # Main layout with scroll area
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(5)
@@ -53,40 +53,33 @@ class SettingsScreen(QWidget):
         title.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title)
 
-        # Scroll area for content
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("QScrollArea { border: none; }")
+        # Tabbed interface - one section per tab
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #444;
+                border-radius: 4px;
+                top: -1px;
+            }
+            QTabBar::tab {
+                padding: 10px 16px;
+                min-height: 32px;
+                min-width: 90px;
+                font-size: 13px;
+                font-weight: bold;
+            }
+            QTabBar::tab:selected {
+                background-color: #2196F3;
+                color: white;
+            }
+        """)
+        self.tabs.addTab(self._wrap_tab(self.create_system_section()), "System")
+        self.tabs.addTab(self._wrap_tab(self.create_device_section()), "Devices")
+        self.tabs.addTab(self._wrap_tab(self.create_drive_section()), "Drive")
+        self.tabs.addTab(self._wrap_tab(self.create_schedules_section()), "Schedules")
+        self.tabs.addTab(self._wrap_tab(self.create_integrations_section()), "Integrations")
+        main_layout.addWidget(self.tabs, 1)
 
-        content_widget = QWidget()
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setSpacing(6)
-        content_layout.setContentsMargins(3, 3, 3, 3)
-
-        # Use 2-column layout for top sections to save vertical space
-        top_row = QHBoxLayout()
-        top_row.setSpacing(6)
-
-        # Left column: Devices + System
-        left_col = QVBoxLayout()
-        left_col.setSpacing(6)
-        left_col.addWidget(self.create_device_section())
-        left_col.addWidget(self.create_system_section())
-        top_row.addLayout(left_col)
-
-        # Right column: Google Drive + Schedules
-        right_col = QVBoxLayout()
-        right_col.setSpacing(6)
-        right_col.addWidget(self.create_drive_section())
-        right_col.addWidget(self.create_schedules_section())
-        top_row.addLayout(right_col)
-
-        content_layout.addLayout(top_row)
-        content_layout.addStretch()
-        
-        scroll.setWidget(content_widget)
-        main_layout.addWidget(scroll)
-        
         # Back button - taller for touch
         back_btn = QPushButton("← Back")
         back_btn.setMinimumHeight(45)
@@ -105,6 +98,28 @@ class SettingsScreen(QWidget):
         """)
         back_btn.clicked.connect(self.back_requested.emit)
         main_layout.addWidget(back_btn)
+
+    def _wrap_tab(self, section: QGroupBox) -> QWidget:
+        """Wrap a section group box in a scrollable tab container."""
+        container = QWidget()
+        outer = QVBoxLayout(container)
+        outer.setContentsMargins(6, 6, 6, 6)
+        outer.setSpacing(6)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; }")
+
+        inner = QWidget()
+        inner_layout = QVBoxLayout(inner)
+        inner_layout.setContentsMargins(0, 0, 0, 0)
+        inner_layout.setSpacing(6)
+        inner_layout.addWidget(section)
+        inner_layout.addStretch()
+
+        scroll.setWidget(inner)
+        outer.addWidget(scroll)
+        return container
 
     def create_device_section(self) -> QGroupBox:
         """Create device settings section."""
@@ -366,10 +381,24 @@ class SettingsScreen(QWidget):
         kiosk_row.addWidget(save_ui_btn)
         layout.addLayout(kiosk_row)
 
-        # Email alerts button
+        return group
+
+    def create_integrations_section(self) -> QGroupBox:
+        """Create integrations section (email alerts, etc.)."""
+        group = QGroupBox("Integrations")
+        group.setStyleSheet("QGroupBox { font-size: 13px; font-weight: bold; padding-top: 8px; }")
+        layout = QVBoxLayout(group)
+        layout.setSpacing(6)
+        layout.setContentsMargins(4, 10, 4, 4)
+
+        email_desc = QLabel("Send email notifications when recordings start, finish, or fail.")
+        email_desc.setStyleSheet("font-size: 11px; color: #666;")
+        email_desc.setWordWrap(True)
+        layout.addWidget(email_desc)
+
         email_btn = QPushButton("📧 Email Alerts")
-        email_btn.setMinimumHeight(40)
-        email_btn.setStyleSheet("font-size: 11px; font-weight: bold;")
+        email_btn.setMinimumHeight(44)
+        email_btn.setStyleSheet("font-size: 12px; font-weight: bold;")
         email_btn.clicked.connect(self.open_email_alerts_dialog)
         layout.addWidget(email_btn)
 
