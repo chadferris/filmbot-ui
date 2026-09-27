@@ -18,11 +18,22 @@ Python-based touchscreen application for the Filmbot recording appliance running
   - Local storage usage
 
 - **Settings Screen**: Post-setup configuration
-  - Change video/audio devices
+  - Tabbed layout (System, Devices, Drive, Schedules, Integrations)
+    designed for the 4.3" touchscreen so no scrolling is needed
+  - Change video/audio devices and ATEM IP
   - Modify Google Drive settings
   - Add/remove recording schedules
   - View system information
   - Update device name
+  - Configure email alerts and ProPresenter integration
+
+- **ProPresenter Integration**: Trigger recordings from slide notes
+  - Supports ProPresenter 6 (Stage Display WebSocket) and
+    ProPresenter 7 (REST API)
+  - Slide notes containing `[START_RECORD]` start a recording;
+    `[STOP_RECORD]` stops the active recording
+  - Runs as a lightweight, event-driven `filmbot-propresenter.service`
+    on the Pi
 
 ## Requirements
 
@@ -51,14 +62,19 @@ sudo chown filmbot:filmbot /opt/filmbot-appliance/ui
 
 ### 3. Copy Application Files
 
-Copy all Python files to `/opt/filmbot-appliance/ui/`:
+Copy the top-level Python files and the `ui/` subdirectory (which contains
+the ProPresenter listener) to `/opt/filmbot-appliance/ui/`:
 
 ```bash
+sudo mkdir -p /opt/filmbot-appliance/ui/ui
 cd /opt/filmbot-appliance/ui
 # Copy files from this repository
 cp /path/to/Filmbot/*.py .
+cp /path/to/Filmbot/ui/*.py ui/
 cp /path/to/Filmbot/requirements.txt .
 ```
+
+The bundled `install.sh` performs these steps automatically.
 
 ### 4. Install Python Dependencies
 
@@ -73,17 +89,22 @@ python3 -m pip install -r requirements.txt
 chmod +x /opt/filmbot-appliance/ui/main.py
 ```
 
-### 6. Install Systemd Service
+### 6. Install Systemd Services
+
+Install both the UI service and the ProPresenter listener service:
 
 ```bash
 sudo cp filmbot-ui.service /etc/systemd/system/
+sudo cp systemd/filmbot-propresenter.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable filmbot-ui.service
+sudo systemctl enable filmbot-propresenter.service
 ```
 
 ### 7. Configure Permissions
 
-The UI needs sudo access to manage systemd timers. Add to sudoers:
+The UI needs sudo access to manage systemd timers and the ProPresenter
+listener service. Add to sudoers:
 
 ```bash
 sudo visudo -f /etc/sudoers.d/filmbot
@@ -98,12 +119,17 @@ filmbot ALL=(ALL) NOPASSWD: /bin/systemctl disable filmbot-record-*.timer
 filmbot ALL=(ALL) NOPASSWD: /bin/systemctl start filmbot-record-*.timer
 filmbot ALL=(ALL) NOPASSWD: /bin/systemctl stop filmbot-record-*.timer
 filmbot ALL=(ALL) NOPASSWD: /bin/systemctl is-active filmbot-record-*.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl restart filmbot-propresenter.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl start filmbot-propresenter.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl stop filmbot-propresenter.service
+filmbot ALL=(ALL) NOPASSWD: /bin/systemctl is-active filmbot-propresenter.service
 ```
 
-### 8. Start the UI
+### 8. Start the Services
 
 ```bash
 sudo systemctl start filmbot-ui.service
+sudo systemctl start filmbot-propresenter.service
 ```
 
 Check status:
@@ -177,9 +203,59 @@ Example configuration:
 ├── video_preview.py        # Video capture widget
 ├── live_view.py            # Main monitoring screen
 ├── wizard.py               # First-boot setup wizard
-├── settings.py             # Settings screen
+├── settings.py             # Settings screen (tabbed layout)
+├── email_notify.py         # Email alert helper
 ├── requirements.txt        # Python dependencies
-└── filmbot-ui.service      # Systemd service file
+└── ui/                     # Auxiliary services
+    └── propresenter_listener.py   # ProPresenter 6/7 listener
+```
+
+Systemd unit files live in the repo under `systemd/` and are installed to
+`/etc/systemd/system/`:
+
+- `filmbot-ui.service` — touchscreen UI
+- `systemd/filmbot-propresenter.service` — ProPresenter slide-tag listener
+- `systemd/filmbot-health.{service,timer}` — periodic health check
+- `systemd/filmbot-daily-report.{service,timer}` — daily email report
+
+## ProPresenter Integration
+
+Filmbot can start and stop recordings when specific tags appear in a
+ProPresenter slide's notes. It is a read-only listener — it never sends
+commands back to ProPresenter.
+
+**Setup on the ProPresenter machine**
+
+- ProPresenter 6: enable *Preferences → Network → Enable Network* and
+  turn on *Stage Display App*. Set a Stage Display password.
+- ProPresenter 7: enable *Preferences → Network → Enable Network* so the
+  REST API is reachable on the LAN.
+
+**Setup on the Filmbot appliance**
+
+1. Open the touchscreen UI and go to **Settings → Integrations →
+   🎬 ProPresenter**.
+2. Choose the version (`ProPresenter 6` or `ProPresenter 7`).
+3. Enter the ProPresenter machine's IP address and port
+   (defaults: PP6 Stage Display = `50001`, PP7 REST API = `1025`).
+4. For ProPresenter 6, enter the Stage Display password.
+5. Tap **Save**. The `filmbot-propresenter.service` restarts automatically
+   with the new settings.
+
+**Authoring slides**
+
+Add `[START_RECORD]` to the slide notes of any slide that should begin a
+recording, and `[STOP_RECORD]` to the slide that should end it. When the
+operator advances to that slide during a service, Filmbot triggers the
+matching action. Repeated firings of the same slide are ignored — only
+transitions to a new slide trigger a start/stop.
+
+**Verifying the listener**
+
+```bash
+sudo systemctl status filmbot-propresenter.service
+sudo journalctl -u filmbot-propresenter.service -f
+tail -f /var/log/filmbot-propresenter.log
 ```
 
 ## Troubleshooting

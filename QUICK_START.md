@@ -51,10 +51,14 @@ chmod +x install.sh
 
 The installer will:
 - Install system dependencies (apt packages)
-- Install Python dependencies (PySide6, opencv-python, psutil)
-- Copy files to `/opt/filmbot-appliance/ui/`
+- Install Python dependencies (PySide6, opencv-python, psutil,
+  websocket-client)
+- Copy top-level Python files to `/opt/filmbot-appliance/ui/` and the
+  auxiliary `ui/` subdirectory (which contains `propresenter_listener.py`)
+  to `/opt/filmbot-appliance/ui/ui/`
 - Configure sudoers for systemd access
-- Install and enable systemd service
+- Install and enable the `filmbot-ui` and `filmbot-propresenter` systemd
+  services
 
 ### Step 3: Enable Production Mode
 
@@ -103,6 +107,37 @@ sudo journalctl -u filmbot-ui.service -f
    - Schedule setup → Add schedules → Click "Next"
    - Finish → Click "Finish"
 3. **After Wizard**: Live view with video preview should appear
+4. **Settings**: The Settings screen uses a tabbed layout
+   (System / Devices / Drive / Schedules / Integrations) so nothing
+   scrolls off the 4.3" touchscreen
+
+## ProPresenter Integration (Optional)
+
+To trigger recordings from ProPresenter slide notes:
+
+1. On the ProPresenter machine, enable network access:
+   - **PP6**: *Preferences → Network → Enable Network* and turn on
+     *Stage Display App* (set a password).
+   - **PP7**: *Preferences → Network → Enable Network* (REST API).
+2. On the Filmbot touchscreen, open **Settings → Integrations →
+   🎬 ProPresenter** and enter:
+   - Version (`ProPresenter 6` or `ProPresenter 7`)
+   - IP address of the ProPresenter machine
+   - Port (PP6 Stage Display default `50001`, PP7 REST default `1025`)
+   - Password (PP6 Stage Display password; leave blank for PP7)
+3. Tap **Save** — the `filmbot-propresenter.service` restarts and picks
+   up the new settings.
+4. In your ProPresenter document, add `[START_RECORD]` to the slide notes
+   of the slide that should begin recording, and `[STOP_RECORD]` to the
+   slide that should end it.
+
+Verify the listener is running:
+
+```bash
+sudo systemctl status filmbot-propresenter.service
+sudo journalctl -u filmbot-propresenter.service -f
+tail -f /var/log/filmbot-propresenter.log
+```
 
 ## Troubleshooting
 
@@ -149,6 +184,33 @@ ps aux | grep filmbot-ui
 # Verify touchscreen device
 ls -l /dev/input/event*
 ```
+
+### ProPresenter listener not triggering
+
+```bash
+# Confirm the service is running
+sudo systemctl status filmbot-propresenter.service
+
+# Tail the listener log for connection or auth errors
+sudo journalctl -u filmbot-propresenter.service -f
+tail -f /var/log/filmbot-propresenter.log
+
+# Verify current configuration
+python3 -c "from config_manager import ConfigManager; \
+    print(ConfigManager().get_propresenter_config())"
+
+# After changing settings via the UI, the service auto-restarts.
+# To restart manually:
+sudo systemctl restart filmbot-propresenter.service
+```
+
+Common issues:
+- Wrong IP/port or firewall blocking the ProPresenter machine
+- PP6 Stage Display password mismatch (check listener log for
+  "authentication rejected")
+- PP7 network API not enabled in ProPresenter preferences
+- Slide notes typed with the wrong casing — tags are literal and
+  case-sensitive: `[START_RECORD]` and `[STOP_RECORD]`
 
 ## Post-Installation Testing
 
@@ -199,6 +261,13 @@ sudo systemctl enable filmbot-ui.service
 # Reset configuration (force wizard)
 sudo rm /opt/filmbot-appliance/config.json
 sudo systemctl restart filmbot-ui.service
+
+# ProPresenter listener
+sudo systemctl start filmbot-propresenter.service
+sudo systemctl stop filmbot-propresenter.service
+sudo systemctl restart filmbot-propresenter.service
+sudo systemctl status filmbot-propresenter.service
+sudo journalctl -u filmbot-propresenter.service -f
 ```
 
 ## Next Steps After Successful Installation
