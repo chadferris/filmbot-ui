@@ -122,6 +122,10 @@ class PP6Listener:
             try:
                 logger.info("Connecting to PP6 Stage Display: %s", url)
                 ws = websocket.create_connection(url, timeout=10)
+                # Clear the socket read timeout inherited from the connect
+                # timeout so recv() blocks indefinitely between slide events
+                # instead of raising after 10 seconds of idle time.
+                ws.settimeout(None)
                 ws.send(json.dumps(
                     {"pwd": self.password, "ptl": 610, "acn": "ath"}
                 ))
